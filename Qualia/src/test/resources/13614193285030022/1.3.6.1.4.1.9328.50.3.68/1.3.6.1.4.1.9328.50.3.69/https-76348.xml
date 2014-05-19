@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LidcReadMessage xmlns="http://www.nih.gov" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.nih.gov LidcReadMessage.xsd">
+  <ResponseHeader uid="1.3.6.1.4.1.9328.50.3.">
+	<Version>1.8</Version>
+	<MessageId>NIH6</MessageId>
+	<DateRequest>2005-10-26</DateRequest>
+	<TimeRequest>00:00:00</TimeRequest>
+	<RequestingSite>NY307</RequestingSite>
+	<ServicingSite>anonymous</ServicingSite>
+	<TaskDescription>Second unblinded read</TaskDescription>
+	<SeriesInstanceUid>1.3.6.1.4.1.9328.50.3.69</SeriesInstanceUid>
+  <StudyInstanceUID>1.3.6.1.4.1.9328.50.3.68</StudyInstanceUID></ResponseHeader>
+  <readingSession>
+    <annotationVersion></annotationVersion>
+    <servicingRadiologistID>anon</servicingRadiologistID>
+  </readingSession>
+<readingSession>
+<annotationVersion>3.12</annotationVersion>
+<servicingRadiologistID>anon</servicingRadiologistID>
+<nonNodule>
+<nonNoduleID>4561</nonNoduleID>
+<imageZposition>-195.520004</imageZposition>
+<imageSOP_UID>1.3.6.1.4.1.9328.50.3.147</imageSOP_UID>
+<locus>
+<xCoord>96</xCoord>
+<yCoord>308</yCoord>
+</locus>
+</nonNodule>
+</readingSession>
+  <readingSession>
+    <annotationVersion>3.12</annotationVersion>
+    <servicingRadiologistID>anon</servicingRadiologistID>
+    <nonNodule>
+      <nonNoduleID>1969</nonNoduleID>
+      <imageZposition>-195.520004</imageZposition>
+      <imageSOP_UID>1.3.6.1.4.1.9328.50.3.147</imageSOP_UID>
+      <locus>
+        <xCoord>96</xCoord>
+        <yCoord>308</yCoord>
+      </locus>
+    </nonNodule>
+    <nonNodule>
+      <nonNoduleID>1970</nonNoduleID>
+      <imageZposition>-205.520004</imageZposition>
+      <imageSOP_UID>1.3.6.1.4.1.9328.50.3.152</imageSOP_UID>
+      <locus>
+        <xCoord>316</xCoord>
+        <yCoord>381</yCoord>
+      </locus>
+    </nonNodule>
+  </readingSession>
+<readingSession>
+<annotationVersion>3.12</annotationVersion>
+<servicingRadiologistID>anon</servicingRadiologistID>
+<nonNodule>
+<nonNoduleID>1380</nonNoduleID>
+<imageZposition>-195.520004</imageZposition>
+<imageSOP_UID>1.3.6.1.4.1.9328.50.3.147</imageSOP_UID>
+<locus>
+<xCoord>96</xCoord>
+<yCoord>308</yCoord>
+</locus>
+</nonNodule>
+<nonNodule>
+<nonNoduleID>1381</nonNoduleID>
+<imageZposition>-205.520004</imageZposition>
+<imageSOP_UID>1.3.6.1.4.1.9328.50.3.152</imageSOP_UID>
+<locus>
+<xCoord>316</xCoord>
+<yCoord>381</yCoord>
+</locus>
+</nonNodule>
+</readingSession>
+</LidcReadMessage>
