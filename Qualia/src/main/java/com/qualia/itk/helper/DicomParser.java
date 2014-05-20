@@ -12,7 +12,10 @@ public class DicomParser {
     private itkGDCMSeriesFileNames dicomNames_;
     private String[] mUidList;
 
+    private String mRootPath;
+
     public DicomParser(String path){
+        mRootPath = path;
         dicomNames_ = new itkGDCMSeriesFileNames();
 
         dicomNames_.SetRecursive(true);
@@ -30,7 +33,7 @@ public class DicomParser {
         itkImageSS3 image = this.loadDicomImages(names);
 
 
-        Metadata data = new Metadata();
+        Metadata data = new Metadata(mRootPath);
 
         String[] keys = image.GetMetaDataDictionary().GetKeys();
         for (String t : keys) {

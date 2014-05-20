@@ -1,6 +1,8 @@
 package com.qualia.view;
 
+import com.j256.ormlite.dao.Dao;
 import com.qualia.controller.MainViewController;
+import com.qualia.model.Metadata;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,12 +15,14 @@ public class MainView extends JFrame {
 	private static final long serialVersionUID = -1245702017236285965L;
 
     private MainViewController mViewController;
+    private Dao<Metadata, Integer> mMetaModel;
 
 	private JTable mTableMeta;
     private JButton mBtnImport;
 
+	public MainView(MainViewController controller, Dao<Metadata, Integer> metadataDao) {
+        mMetaModel = metadataDao;
 
-	public MainView(MainViewController controller) {
         mViewController = controller;
 
 		getContentPane().setLayout(new BorderLayout(0, 0));
@@ -50,19 +54,26 @@ public class MainView extends JFrame {
 		JButton toolbarBtnEtc = new JButton("Etc");
 		toolBar.add(toolbarBtnEtc);
 
-        mTableMeta = new JTable();
-        mTableMeta.setModel(new DefaultTableModel(new Object[][] { { null, null,
-				null, null, null, null, null, null, null, null, null }, },
-				new String[] { "Patient's Name", "Patient ID ",
-						"Patient's Birth Date", "Patient's Sex",
-						"Accession Number", "Modality", "Study ID",
-						"Acquisition Date", "Content Date", "Institution Name",
-						"Referring Physician's Name" }));
-        mTableMeta.getColumnModel().getColumn(0).setPreferredWidth(86);
-        mTableMeta.getColumnModel().getColumn(1).setPreferredWidth(62);
-        mTableMeta.getColumnModel().getColumn(2).setPreferredWidth(110);
-        mTableMeta.getColumnModel().getColumn(4).setPreferredWidth(111);
-		getContentPane().add(mTableMeta, BorderLayout.CENTER);
+        DefaultTableModel metaModel = new DefaultTableModel(
+                new String[] {
+                        Metadata.KEY_PATIENT_NAME,
+                        Metadata.KEY_PATIENT_ID,
+                        Metadata.KEY_PATIENT_BIRTHDAY,
+                        Metadata.KEY_PATIENT_SEX,
+                        Metadata.KEY_ACCESSION_NUMBER,
+                        Metadata.KEY_MODALITY,
+                        Metadata.KEY_STUDY_ID,
+                        Metadata.KEY_ACQUISION_DATE,
+                        Metadata.KEY_CONTENT_DATE,
+                        Metadata.KEY_INSTITUTE_NAME,
+                        Metadata.KEY_REFERRING_NAME,
+                },
+                0
+        );
+
+        mTableMeta = new JTable(metaModel);
+
+		getContentPane().add(new JScrollPane(mTableMeta), BorderLayout.CENTER);
 
 		JSplitPane splitPane = new JSplitPane();
 		getContentPane().add(splitPane, BorderLayout.SOUTH);
@@ -75,9 +86,41 @@ public class MainView extends JFrame {
 	}
 
     public void init(){
+
+        this.setPreferredSize(new Dimension(1024, 768));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         this.setVisible(true);
+    }
+
+    private void addTableColumn(Metadata data){
+        DefaultTableModel model = (DefaultTableModel) mTableMeta.getModel();
+        model.addRow(new String[] {
+                data.patientName,
+                data.patientId,
+                data.patientBirthday,
+                data.patientSex,
+                data.accessionNumber,
+                data.modality,
+                data.studyId,
+                data.acquisionDate,
+                data.contentDate,
+                data.instituteName,
+                data.referringName
+        });
+
+    }
+
+    public void updateMetaTable(){
+        try{
+            mMetaModel.queryForAll();
+
+            for (Metadata metadata : mMetaModel) {
+                this.addTableColumn(metadata);
+            }
+        }catch(Exception e){
+
+        }
     }
 
 }

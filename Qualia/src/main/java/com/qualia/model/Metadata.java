@@ -1,5 +1,9 @@
 package com.qualia.model;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+@DatabaseTable(tableName = "metadata")
 public class Metadata {
     public final static String KEY_PATIENT_NAME = "Patient's Name";
     public final static String KEY_PATIENT_ID = "Patient ID";
@@ -13,17 +17,45 @@ public class Metadata {
     public final static String KEY_INSTITUTE_NAME = "Institution Name";
     public final static String KEY_REFERRING_NAME = "Referring Physician's Name";
 
+
+
+    @DatabaseField(generatedId = true)
+    private int id;
+
+    @DatabaseField(columnName = "path")
+    public String path;
+
+    @DatabaseField(columnName = "patientId")
     public String patientId;
+    @DatabaseField(columnName = "name")
     public String patientName;
+    @DatabaseField(columnName = "birthday")
     public String patientBirthday;
+    @DatabaseField(columnName = "sex")
     public String patientSex;
+    @DatabaseField(columnName = "acc")
     public String accessionNumber;
+    @DatabaseField(columnName = "modality")
     public String modality;
+    @DatabaseField(columnName = "studyId")
     public String studyId;
+    @DatabaseField(columnName = "acqDate")
     public String acquisionDate;
+    @DatabaseField(columnName = "contentDate")
     public String contentDate;
+    @DatabaseField(columnName = "institute")
     public String instituteName;
+    @DatabaseField(columnName = "referName")
     public String referringName;
+
+    Metadata(){
+
+    }
+
+    public Metadata(String path){
+        this.path = path;
+
+    }
 
     @Override
     public String toString() {
