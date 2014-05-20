@@ -1,18 +1,14 @@
 package ITKTest;
 
-import java.io.File;
-import java.io.FilenameFilter;
-
-import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkcommon.itkMetaDataObjectBase;
-import org.itk.itkcommon.itkMetaDataObjectS;
-import org.itk.itkcommon.itkSize3;
-import org.itk.itkcommon.itkVectorD3;
+import org.itk.itkcommon.*;
 import org.itk.itkimagefunction.itkLinearInterpolateImageFunctionISS3D;
 import org.itk.itkimagegrid.itkResampleImageFilterISS3ISS3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itkiogdcm.itkGDCMImageIO;
 import org.itk.itktransform.itkIdentityTransformD3;
+
+import java.io.File;
+import java.io.FilenameFilter;
 
 /**
  * <pre>

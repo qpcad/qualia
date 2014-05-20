@@ -5,7 +5,8 @@ apply plugin:'application'
 sourceCompatibility = 1.6
 version = '1.0'
 
-mainClassName = "VTKTest.DemoJavaVTK"
+mainClassName = "com.qualia.controller.MainViewController"
+//mainClassName = "VTKTest.DemoJavaVTK"
 //mainClassName = "ITKTest.CadTest"
 project.ext.jarDir =  project.projectDir.absolutePath + '/../libs/jar'
 println "jarDir:" + project.ext.jarDir
