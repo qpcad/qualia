@@ -229,7 +229,7 @@ public class ItkVtkTest extends JFrame {
 
         System.out.println(data.toString());
 
-        inputImage = parser.image;
+        inputImage = parser.getImage();
 
         //System.out.println(inputImage.toString());
 

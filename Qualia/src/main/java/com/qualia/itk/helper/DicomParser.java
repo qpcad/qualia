@@ -14,6 +14,8 @@ public class DicomParser {
 
     private String mRootPath;
 
+    private itkImageSS3 image_;
+
     public DicomParser(String path){
         mRootPath = path;
         dicomNames_ = new itkGDCMSeriesFileNames();
@@ -30,12 +32,12 @@ public class DicomParser {
 
     public Metadata getMetadataByUid(String Uid){
         String[] names = dicomNames_.GetFileNames(Uid);
-        itkImageSS3 image = this.loadDicomImages(names);
+        image_ = this.loadDicomImages(names);
 
 
         Metadata data = new Metadata(mRootPath);
 
-        String[] keys = image.GetMetaDataDictionary().GetKeys();
+        String[] keys = getImage().GetMetaDataDictionary().GetKeys();
         for (String t : keys) {
             String[] labelId = new String[1];
             String value;
@@ -48,7 +50,7 @@ public class DicomParser {
             // C pointer를 이용하여 Base형의 데이터를 String으로 변환
 
             // 포인터 가져오기
-            long pointer = itkMetaDataObjectBase.getCPtr(image.GetMetaDataDictionary().Get(t));
+            long pointer = itkMetaDataObjectBase.getCPtr(getImage().GetMetaDataDictionary().Get(t));
 
             // 포인터를 이용하여 생성
             itkMetaDataObjectS metaObject = new itkMetaDataObjectS(pointer, false);
@@ -110,4 +112,7 @@ public class DicomParser {
         return lungImage;
     }
 
+    public itkImageSS3 getImage() {
+        return image_;
+    }
 }
