@@ -1,3 +1,5 @@
+package ITKTest;
+
 import com.qualia.itk.helper.DicomParser;
 import com.qualia.model.Metadata;
 import org.itk.itkcommon.itkImageSS3;
