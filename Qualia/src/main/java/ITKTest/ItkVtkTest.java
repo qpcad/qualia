@@ -23,9 +23,6 @@ public class ItkVtkTest extends JFrame {
 
             renWin_.setInteractorStyle(new vtkInteractorStyleImage());
 
-            viewer_.SetColorLevel(-500);
-            viewer_.SetColorWindow(3000);
-
             add(renWin_, BorderLayout.CENTER);
         }
 
@@ -49,10 +46,20 @@ public class ItkVtkTest extends JFrame {
         public void setInput(vtkImageData image) {
             viewer_.SetInputData(image);
 
+            viewer_.GetRenderer().ResetCamera();
             viewer_.SetRenderWindow(renWin_.GetRenderWindow());
             viewer_.SetupInteractor(renWin_.GetRenderWindow().GetInteractor());
 
-            renWin_.Render();
+            viewer_.SetColorLevel(-500);
+            viewer_.SetColorWindow(3000);
+
+            int sliceMin, sliceMax, sliceMiddle;
+
+            sliceMin = viewer_.GetSliceMin();
+            sliceMax = viewer_.GetSliceMax();
+            sliceMiddle = (sliceMax-sliceMin)/2;
+
+            viewer_.SetSlice(sliceMiddle);
         }
     }
 
@@ -174,15 +181,12 @@ public class ItkVtkTest extends JFrame {
 
         // viewer initialize
         sliceViewer1_ = new SliceViewer();
-        sliceViewer1_.setSliceOrientationToXY();
         sliceViewer1_.setPreferredSize(new Dimension(600, 600));
 
         sliceViewer2_ = new SliceViewer();
-        sliceViewer2_.setSliceOrientationToXZ();
         sliceViewer2_.setPreferredSize(new Dimension(600, 600));
 
         sliceViewer3_ = new SliceViewer();
-        sliceViewer3_.setSliceOrientationToYZ();
         sliceViewer3_.setPreferredSize(new Dimension(600, 600));
 
 
@@ -196,12 +200,15 @@ public class ItkVtkTest extends JFrame {
     public void sliceViewer(vtkImageData image) {
         // set data
         sliceViewer1_.setInput(image);
+        sliceViewer1_.setSliceOrientationToXY();
         sliceViewer1_.setSlice(50);
 
         sliceViewer2_.setInput(image);
+        sliceViewer2_.setSliceOrientationToXZ();
         sliceViewer2_.setSlice(200);
 
         sliceViewer3_.setInput(image);
+        sliceViewer3_.setSliceOrientationToYZ();
         sliceViewer3_.setSlice(100);
     }
 
