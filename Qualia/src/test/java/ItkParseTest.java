@@ -1,19 +1,39 @@
-import com.qualia.itk.helper.DicomParser;
+import com.qualia.helper.DicomParser;
 import com.qualia.model.Metadata;
+import org.junit.Before;
 import org.junit.Test;
+import vtk.vtkImageData;
+import vtk.vtkRenderWindowPanel;
 
 public class ItkParseTest {
-    @Test
-    public void testDicomParser(){
+    DicomParser mParser;
+
+    @Before
+    public void init(){
+        new vtkRenderWindowPanel();
         String currentDir = System.getProperty("user.dir");
         String path = currentDir + "/src/test/resources/13614193285030022";
 
-        DicomParser parser = new DicomParser(path);
+        mParser = new DicomParser(path);
 
-        String[] uIds = parser.getUidList();
-        Metadata data = parser.getMetadataByUid(uIds[0]);
+    }
+
+    @Test
+    public void testMetadataLoad(){
+        String[] uIds = mParser.getUidList();
+        Metadata data = mParser.getMetadataByUid(uIds[0]);
 
         System.out.println(data.toString());
+
+        assert(data!=null);
+    }
+
+    @Test
+    public void test(){
+        String[] uIds = mParser.getUidList();
+        vtkImageData vtkData = mParser.getVtkImageByUid(uIds[0]);
+
+        assert(vtkData!=null);
 
     }
 }

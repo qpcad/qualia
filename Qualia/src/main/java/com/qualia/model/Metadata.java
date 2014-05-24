@@ -22,6 +22,8 @@ public class Metadata {
     @DatabaseField(generatedId = true)
     private int id;
 
+    @DatabaseField(columnName = "uid")
+    public String uId;
     @DatabaseField(columnName = "path")
     public String path;
 
@@ -52,15 +54,16 @@ public class Metadata {
 
     }
 
-    public Metadata(String path){
+    public Metadata(String path, String uId){
         this.path = path;
-
+        this.uId = uId;
     }
 
     @Override
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
+        sb.append("uId").append(":").append(uId).append("\n");
         sb.append(KEY_PATIENT_NAME).append(":").append(patientName).append("\n");
         sb.append(KEY_PATIENT_ID).append(":").append(patientId).append("\n");
         sb.append(KEY_PATIENT_BIRTHDAY).append(":").append(patientBirthday).append("\n");

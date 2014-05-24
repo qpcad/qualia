@@ -1,6 +1,6 @@
 package ITKTest;
 
-import com.qualia.itk.helper.DicomParser;
+import com.qualia.helper.DicomParser;
 import com.qualia.model.Metadata;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
@@ -236,15 +236,7 @@ public class ItkVtkTest extends JFrame {
 
         System.out.println(data.toString());
 
-        inputImage = parser.getImage();
-
-        //System.out.println(inputImage.toString());
-
-        //convert ITK to VTK
-        itkVtkFilter.SetInput(inputImage);
-        itkVtkFilter.Update();
-
-        outputImage = itkVtkFilter.GetOutput();
+        outputImage = parser.getVtkImageByUid(uIds[0]);
 
         return outputImage;
     }

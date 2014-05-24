@@ -5,7 +5,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.qualia.itk.helper.DicomParser;
+import com.qualia.helper.DicomParser;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
 
@@ -72,8 +72,19 @@ public class MainViewController {
             System.out.println("No selection");
             JOptionPane.showMessageDialog(mMainView, "No Selection");
         }
+    }
+
+    public void onTableDataClicked(){
+        // load thumbnail data
+        // show thumbnail data
+        Object thumbnailData;
 
 
+
+        // load 2D View XY Plate
+        // show 2D View XY Plate
+//        mMainView.updateThumbnailPanel();
+//        mMainView.updateXYPlanePanel();
     }
 
 
