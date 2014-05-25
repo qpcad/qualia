@@ -6,9 +6,11 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.qualia.helper.DicomParser;
+import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
+import vtk.vtkImageViewer2;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
@@ -84,17 +86,17 @@ public class MainViewController {
         }
     }
 
-    public void onTableDataClicked(){
-        // load thumbnail data
-        // show thumbnail data
-        Object thumbnailData;
+    public void onTableDataClicked(Metadata targetMetadata){
+        System.out.println("clicked");
+        System.out.println(targetMetadata.toString());
 
+        vtkImageViewer2 imageViewer = new vtkImageViewer2();
 
+        imageViewer.SetInputData(VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId));
+        imageViewer.GetRenderer().ResetCamera();
 
-        // load 2D View XY Plate
-        // show 2D View XY Plate
-//        mMainView.updateThumbnailPanel();
-//        mMainView.updateXYPlanePanel();
+        mMainView.updateRightPenel(imageViewer);
+
     }
 
 

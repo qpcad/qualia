@@ -236,7 +236,7 @@ public class ItkVtkTest extends JFrame {
 
         System.out.println(data.toString());
 
-        outputImage = parser.getVtkImageByUid(uIds[0]);
+        outputImage = null; //parser.getVtkImageByUid(uIds[0]);
 
         return outputImage;
     }

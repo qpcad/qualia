@@ -8,14 +8,12 @@ import org.itk.itkiogdcm.itkGDCMImageIO;
 import org.itk.itkiogdcm.itkGDCMSeriesFileNames;
 import org.itk.itkioimagebase.itkImageSeriesReaderISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
-import vtk.vtkImageData;
 import vtk.vtkRenderWindowPanel;
 
 import java.util.HashMap;
 
 public class DicomParser {
     private HashMap<String, Metadata> mMetaMap;
-    private HashMap<String, vtkImageData> mVtkImageMap;
 
     private itkGDCMSeriesFileNames dicomNames_;
     private String[] mUidList;
@@ -24,7 +22,6 @@ public class DicomParser {
 
     public DicomParser(String path){
         mMetaMap = new HashMap<String, Metadata>();
-        mVtkImageMap = new HashMap<String, vtkImageData>();
 
         mRootPath = path;
         dicomNames_ = new itkGDCMSeriesFileNames();
@@ -47,9 +44,7 @@ public class DicomParser {
             //convert ITK to VTK
             itkVtkFilter.SetInput(itkImages);
             itkVtkFilter.Update();
-
-            mVtkImageMap.put(uid, itkVtkFilter.GetOutput());
-
+            VtkImageArchive.getInstance().setVtkImage(uid, itkVtkFilter.GetOutput());
 
             Metadata data = new Metadata(mRootPath, uid);
 
@@ -120,11 +115,6 @@ public class DicomParser {
 
     public Metadata getMetadataByUid(String uId){
         return mMetaMap.get(uId);
-    }
-
-    public vtkImageData getVtkImageByUid(String uId){
-
-        return mVtkImageMap.get(uId);
     }
 
     private itkImageSS3 loadDicomImages(String[] fullFilenameList) {

@@ -2,9 +2,14 @@ package com.qualia.view;
 
 import com.qualia.controller.MainViewController;
 import com.qualia.model.MetaTableTreeModel;
+import com.qualia.model.Metadata;
 import org.jdesktop.swingx.JXTreeTable;
+import vtk.vtkImageViewer2;
+import vtk.vtkInteractorStyleImage;
+import vtk.vtkRenderWindowPanel;
 
 import javax.swing.*;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -17,8 +22,9 @@ public class MainView extends JFrame {
 
     private JXTreeTable mTreeTable;
     private JButton mBtnImport;
+    private vtkRenderWindowPanel mRightPanel;
 
-	public MainView(MainViewController controller, MetaTableTreeModel tableModel) {
+	public MainView(final MainViewController controller, final MetaTableTreeModel tableModel) {
 
         mViewController = controller;
 
@@ -52,6 +58,19 @@ public class MainView extends JFrame {
 		toolBar.add(toolbarBtnEtc);
 
         mTreeTable = new JXTreeTable(tableModel);
+        mTreeTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
+                Object target = treePath.getLastPathComponent();
+                System.out.println(target.toString());
+
+                if(target instanceof Metadata){
+                    controller.onTableDataClicked((Metadata) target);
+                }
+
+            }
+        });
         mTreeTable.setRootVisible(false);
 
 		getContentPane().add(new JScrollPane(mTreeTable), BorderLayout.CENTER);
@@ -59,11 +78,12 @@ public class MainView extends JFrame {
 		JSplitPane splitPane = new JSplitPane();
 		getContentPane().add(splitPane, BorderLayout.SOUTH);
 
-		JPanel panel = new JPanel();
-		splitPane.setLeftComponent(panel);
+        JPanel panel_1 = new JPanel();
+        splitPane.setLeftComponent(panel_1);
 
-		JPanel panel_1 = new JPanel();
-		splitPane.setRightComponent(panel_1);
+        mRightPanel = new vtkRenderWindowPanel();
+		splitPane.setRightComponent(mRightPanel);
+        mRightPanel.setInteractorStyle(new vtkInteractorStyleImage());
 	}
 
     public void init(){
@@ -78,4 +98,22 @@ public class MainView extends JFrame {
         mTreeTable.updateUI();
     }
 
+    public void updateRightPenel(vtkImageViewer2 imageViewer){
+        imageViewer.SetRenderWindow(mRightPanel.GetRenderWindow());
+        imageViewer.SetupInteractor(mRightPanel.GetRenderWindow().GetInteractor());
+
+        imageViewer.SetColorLevel(-500);
+        imageViewer.SetColorWindow(3000);
+
+        int sliceMin, sliceMax, sliceMiddle;
+
+        sliceMin = imageViewer.GetSliceMin();
+        sliceMax = imageViewer.GetSliceMax();
+        sliceMiddle = (sliceMax-sliceMin)/2;
+
+        imageViewer.SetSlice(sliceMiddle);
+        imageViewer.SetSliceOrientationToXY();
+
+        mRightPanel.Render();
+    }
 }

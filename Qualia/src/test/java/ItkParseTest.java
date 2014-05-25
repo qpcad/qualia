@@ -2,7 +2,6 @@ import com.qualia.helper.DicomParser;
 import com.qualia.model.Metadata;
 import org.junit.Before;
 import org.junit.Test;
-import vtk.vtkImageData;
 import vtk.vtkRenderWindowPanel;
 
 public class ItkParseTest {
@@ -28,12 +27,4 @@ public class ItkParseTest {
         assert(data!=null);
     }
 
-    @Test
-    public void test(){
-        String[] uIds = mParser.getUidList();
-        vtkImageData vtkData = mParser.getVtkImageByUid(uIds[0]);
-
-        assert(vtkData!=null);
-
-    }
 }
