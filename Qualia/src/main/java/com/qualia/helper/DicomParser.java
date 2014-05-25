@@ -9,6 +9,7 @@ import org.itk.itkiogdcm.itkGDCMSeriesFileNames;
 import org.itk.itkioimagebase.itkImageSeriesReaderISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
 import vtk.vtkImageData;
+import vtk.vtkRenderWindowPanel;
 
 import java.util.HashMap;
 
@@ -35,9 +36,20 @@ public class DicomParser {
 
         for(int i=0;i<mUidList.length;i++){
             String uid = mUidList[i];
+            System.out.println("try to parse : " + uid);
             String[] fullFilenameList = dicomNames_.GetFileNames(uid);
 
             itkImageSS3 itkImages = this.loadDicomImages(fullFilenameList);
+
+            itkImageToVTKImageFilterISS3 itkVtkFilter =
+                    new itkImageToVTKImageFilterISS3();
+
+            //convert ITK to VTK
+            itkVtkFilter.SetInput(itkImages);
+            itkVtkFilter.Update();
+
+            mVtkImageMap.put(uid, itkVtkFilter.GetOutput());
+
 
             Metadata data = new Metadata(mRootPath, uid);
 
@@ -98,15 +110,6 @@ public class DicomParser {
             }
 
             mMetaMap.put(uid, data);
-
-            itkImageToVTKImageFilterISS3 itkVtkFilter =
-                    new itkImageToVTKImageFilterISS3();
-
-            //convert ITK to VTK
-            itkVtkFilter.SetInput(itkImages);
-            itkVtkFilter.Update();
-
-            mVtkImageMap.put(uid, itkVtkFilter.GetOutput());
         }
     }
 
@@ -137,6 +140,10 @@ public class DicomParser {
         lungImage.SetMetaDataDictionary(dicomIO.GetMetaDataDictionary());
 
         return lungImage;
+    }
+
+    static{
+        new vtkRenderWindowPanel();
     }
 
 }

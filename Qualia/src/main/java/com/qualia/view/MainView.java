@@ -2,13 +2,17 @@ package com.qualia.view;
 
 import com.j256.ormlite.dao.Dao;
 import com.qualia.controller.MainViewController;
+import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
+import com.qualia.model.Patient;
+import org.jdesktop.swingx.JXTreeTable;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Vector;
 
 public class MainView extends JFrame {
 
@@ -17,7 +21,8 @@ public class MainView extends JFrame {
     private MainViewController mViewController;
     private Dao<Metadata, Integer> mMetaModel;
 
-	private JTable mTableMeta;
+
+    private JXTreeTable mTreeTable;
     private JButton mBtnImport;
 
 	public MainView(MainViewController controller, Dao<Metadata, Integer> metadataDao) {
@@ -54,26 +59,10 @@ public class MainView extends JFrame {
 		JButton toolbarBtnEtc = new JButton("Etc");
 		toolBar.add(toolbarBtnEtc);
 
-        DefaultTableModel metaModel = new DefaultTableModel(
-                new String[] {
-                        Metadata.KEY_PATIENT_NAME,
-                        Metadata.KEY_PATIENT_ID,
-                        Metadata.KEY_PATIENT_BIRTHDAY,
-                        Metadata.KEY_PATIENT_SEX,
-                        Metadata.KEY_ACCESSION_NUMBER,
-                        Metadata.KEY_MODALITY,
-                        Metadata.KEY_STUDY_ID,
-                        Metadata.KEY_ACQUISION_DATE,
-                        Metadata.KEY_CONTENT_DATE,
-                        Metadata.KEY_INSTITUTE_NAME,
-                        Metadata.KEY_REFERRING_NAME,
-                },
-                0
-        );
+        mTreeTable = new JXTreeTable(new MetaTableTreeModel());
+        mTreeTable.setRootVisible(false);
 
-        mTableMeta = new JTable(metaModel);
-
-		getContentPane().add(new JScrollPane(mTableMeta), BorderLayout.CENTER);
+		getContentPane().add(new JScrollPane(mTreeTable), BorderLayout.CENTER);
 
 		JSplitPane splitPane = new JSplitPane();
 		getContentPane().add(splitPane, BorderLayout.SOUTH);
@@ -93,33 +82,40 @@ public class MainView extends JFrame {
         this.setVisible(true);
     }
 
-    private void addTableColumn(Metadata data){
-        DefaultTableModel model = (DefaultTableModel) mTableMeta.getModel();
-        model.addRow(new String[] {
-                data.patientName,
-                data.patientId,
-                data.patientBirthday,
-                data.patientSex,
-                data.accessionNumber,
-                data.modality,
-                data.studyId,
-                data.acquisionDate,
-                data.contentDate,
-                data.instituteName,
-                data.referringName
-        });
-
-    }
-
     public void updateMetaTable(){
         try{
             mMetaModel.queryForAll();
 
-            for (Metadata metadata : mMetaModel) {
-                this.addTableColumn(metadata);
-            }
-        }catch(Exception e){
+            HashMap<String, Vector<Metadata>> patientMap =
+                    new HashMap<String, Vector<Metadata>>();
 
+            for (Metadata metadata : mMetaModel) {
+                Vector<Metadata> metaList = patientMap.get(metadata.patientId);
+
+                if(metaList==null){
+                    metaList = new Vector<Metadata>();
+                    patientMap.put(metadata.patientId, metaList);
+                }
+
+                metaList.add(metadata);
+            }
+
+            Vector<Patient> patientVector = new Vector<Patient>();
+
+            patientMap.keySet();
+
+            for(String key : patientMap.keySet()){
+                Patient patient = new Patient();
+                patient.setMetaDataList(patientMap.get(key));
+                patientVector.add(patient);
+            }
+
+            MetaTableTreeModel model = (MetaTableTreeModel) mTreeTable.getTreeTableModel();
+            model.setPatientList(patientVector);
+
+            mTreeTable.updateUI();
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 

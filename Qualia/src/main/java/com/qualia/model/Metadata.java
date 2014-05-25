@@ -26,7 +26,6 @@ public class Metadata {
     public String uId;
     @DatabaseField(columnName = "path")
     public String path;
-
     @DatabaseField(columnName = "patientId")
     public String patientId;
     @DatabaseField(columnName = "name")
