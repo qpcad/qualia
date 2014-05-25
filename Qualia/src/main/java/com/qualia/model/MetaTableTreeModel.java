@@ -1,5 +1,6 @@
 package com.qualia.model;
 
+import com.j256.ormlite.dao.Dao;
 import org.jdesktop.swingx.treetable.AbstractTreeTableModel;
 
 import java.util.*;
@@ -25,8 +26,33 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
         super(new Object());
     }
 
-    public void setPatientList(Vector<Patient> patientList){
-        mPatientList = patientList;
+    public void updatePatientList(Dao<Metadata, Integer> metaDao){
+        HashMap<String, Vector<Metadata>> patientMap =
+                new HashMap<String, Vector<Metadata>>();
+
+        for (Metadata metadata : metaDao) {
+            Vector<Metadata> metaList = patientMap.get(metadata.patientId);
+
+            if(metaList==null){
+                metaList = new Vector<Metadata>();
+                patientMap.put(metadata.patientId, metaList);
+            }
+
+            metaList.add(metadata);
+        }
+
+        Vector<Patient> patientVector = new Vector<Patient>();
+
+        patientMap.keySet();
+
+        for(String key : patientMap.keySet()){
+            Patient patient = new Patient();
+            patient.setMetaDataList(patientMap.get(key));
+            patientVector.add(patient);
+        }
+
+        mPatientList = patientVector;
+
     }
 
     @Override

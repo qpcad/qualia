@@ -6,6 +6,7 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.qualia.helper.DicomParser;
+import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
 
@@ -21,10 +22,12 @@ public class MainViewController {
     private ConnectionSource connectionSource = null;
     private Dao<Metadata, Integer> metadataDao;
 
+    private MetaTableTreeModel mMetaTableModel;
+
     public MainViewController(){
         this.init();
 
-        mMainView = new MainView(this, metadataDao);
+        mMainView = new MainView(this, mMetaTableModel);
         mMainView.init();
     }
 
@@ -40,6 +43,7 @@ public class MainViewController {
             JOptionPane.showMessageDialog(mMainView, "Database error");
         }
 
+        mMetaTableModel = new MetaTableTreeModel();
     }
 
     public void onImportBtnClicked(MouseEvent event) {
@@ -66,6 +70,12 @@ public class MainViewController {
                 }
             }
 
+            try{
+                metadataDao.queryForAll();
+                mMetaTableModel.updatePatientList(metadataDao);
+            }catch(Exception e){
+                JOptionPane.showMessageDialog(mMainView, "Database error");
+            }
             mMainView.updateMetaTable();
 
         } else {
