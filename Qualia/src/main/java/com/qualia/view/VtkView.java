@@ -17,7 +17,7 @@ public class VtkView  extends JDialog {
         panelTopLeft.setOrientation(VtkSliceRenderPanel.ORIENTATION_XY);
         getContentPane().add(panelTopLeft);
 
-        VtkSliceRenderPanel panelTopRight = new VtkSliceRenderPanel(target);
+        VtkVolumeRenderPanel panelTopRight = new VtkVolumeRenderPanel(target);
         getContentPane().add(panelTopRight);
 
         VtkSliceRenderPanel panelBottomLeft = new VtkSliceRenderPanel(target);
