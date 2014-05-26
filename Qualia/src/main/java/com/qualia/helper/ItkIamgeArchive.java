@@ -1,7 +1,6 @@
 package com.qualia.helper;
 
 import org.itk.itkcommon.itkImageSS3;
-import vtk.vtkImageData;
 
 import java.util.HashMap;
 
@@ -14,7 +13,7 @@ public class ItkIamgeArchive {
         mMap = new HashMap<String, itkImageSS3>();
     }
 
-    public static VtkImageArchive getInstance(){
+    public static ItkIamgeArchive getInstance(){
         if(mInstance==null){
             mInstance = new ItkIamgeArchive();
         }
