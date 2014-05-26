@@ -26,6 +26,8 @@ public class MainViewController {
 
     private MetaTableTreeModel mMetaTableModel;
 
+    private VtkViewController mVtkViwerController;
+
     public MainViewController(){
         this.init();
 
@@ -96,7 +98,10 @@ public class MainViewController {
         imageViewer.GetRenderer().ResetCamera();
 
         mMainView.updateRightPenel(imageViewer);
+    }
 
+    public void onTableDataDoubleClicked(Metadata targetMetadata){
+        mVtkViwerController = new VtkViewController(mMainView, targetMetadata);
     }
 
 

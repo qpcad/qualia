@@ -61,12 +61,19 @@ public class MainView extends JFrame {
         mTreeTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
+
+
                 TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
                 Object target = treePath.getLastPathComponent();
                 System.out.println(target.toString());
 
                 if(target instanceof Metadata){
                     controller.onTableDataClicked((Metadata) target);
+                }
+
+                if((mouseEvent.getClickCount()==2)&&(target instanceof Metadata)){
+                    System.out.println("double clicked");
+                    controller.onTableDataDoubleClicked((Metadata) target);
                 }
 
             }
