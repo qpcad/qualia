@@ -15,10 +15,6 @@ public class OptionTableModel extends AbstractTableModel{
 
     public OptionTableModel(){
         HashMap<String, String> optionMap = new HashMap<String, String>();
-        optionMap.put("k1", "v1");
-        optionMap.put("k2", "v2");
-        optionMap.put("k3", "v3");
-        optionMap.put("k4", "v4");
         this.setOptionMap(optionMap);
     }
 
