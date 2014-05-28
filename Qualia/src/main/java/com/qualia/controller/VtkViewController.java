@@ -1,11 +1,13 @@
 package com.qualia.controller;
 
 import ITKTest.LungSegmentation;
+import ITKTest.NoduleCandidatesDetection;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
 import com.qualia.view.VtkView;
 import org.itk.itkcommon.itkImageSS3;
+import org.itk.itkcommon.itkImageUC3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.jdesktop.swingx.JXTable;
 
@@ -15,6 +17,10 @@ import java.util.HashMap;
 public class VtkViewController {
     Metadata mModel;
     VtkView dialog;
+
+    itkImageSS3 lungImage;
+    itkImageUC3 lungMaskImage;
+    itkImageSS3 lungSegImage;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
@@ -39,20 +45,21 @@ public class VtkViewController {
 
         System.out.println("Lung Segmentation");
         /* Lung Segmentation */
-        itkImageSS3 lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
+        lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
         LungSegmentation lungSegmentation = new LungSegmentation();
         lungSegmentation.setLungImage(lungImage);
         lungSegmentation.run();
+
+        lungMaskImage = lungSegmentation.getLungMask();
 
         /* Lung Masking */
         itkMaskImageFilterISS3IUC3ISS3 maskFilter = new itkMaskImageFilterISS3IUC3ISS3();
 
         maskFilter.SetInput1(lungImage);
-        maskFilter.SetInput2(lungSegmentation.getLungMask());
+        maskFilter.SetInput2(lungMaskImage);
         maskFilter.SetOutsideValue((short) -2000);
         maskFilter.Update();
 
-        itkImageSS3 lungSegImage;
         lungSegImage = maskFilter.GetOutput();
 
         /* To Viewer */
@@ -69,6 +76,20 @@ public class VtkViewController {
         model.setOptionMap(map);
 
         model.fireTableDataChanged();
+
+        if (lungImage == null || lungMaskImage == null)
+            onModule1BtnClicked(optionTable);
+
+        System.out.println("Nodule Candidates Detection");
+        /* Nodule Candidates Detection */
+        NoduleCandidatesDetection noduleCandidateDetection = new NoduleCandidatesDetection();
+        noduleCandidateDetection.setLungImage(lungImage);
+        noduleCandidateDetection.setLungMask(lungMaskImage);
+        noduleCandidateDetection.run();
+
+
+        /* To Viewer */
+        dialog.renderItkImage(noduleCandidateDetection.getNoduleCandidatesLabel());
     }
 
 

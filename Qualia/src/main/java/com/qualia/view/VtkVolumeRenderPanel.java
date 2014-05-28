@@ -6,14 +6,12 @@ import vtk.*;
 public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
     private Metadata mModel;
 
-    public VtkVolumeRenderPanel(Metadata model){
+    public VtkVolumeRenderPanel(Metadata model) {
         setInteractorStyle(new vtkInteractorStyleTrackballCamera());
         this.mModel = model;
     }
 
     public void render(vtkImageData image) {
-
-
         vtkPiecewiseFunction opacityTransferFunction = new vtkPiecewiseFunction();
         opacityTransferFunction.AddPoint(0, 0.0);
         //opacityTransferFunction.AddPoint(8, 0.0);

@@ -12,6 +12,95 @@ import java.awt.*;
 
 
 public class ItkVtkTest extends JFrame {
+    private VolumeViewer volumeViewer_;
+    private SliceViewer sliceViewer1_;
+    private SliceViewer sliceViewer2_;
+    private SliceViewer sliceViewer3_;
+
+    public ItkVtkTest() {
+        GridLayout testLayout = new GridLayout(2, 2);
+        setLayout(testLayout);
+
+        volumeViewer_ = new VolumeViewer();
+        volumeViewer_.setPreferredSize(new Dimension(600, 600));
+
+        // viewer initialize
+        sliceViewer1_ = new SliceViewer();
+        sliceViewer1_.setPreferredSize(new Dimension(600, 600));
+
+        sliceViewer2_ = new SliceViewer();
+        sliceViewer2_.setPreferredSize(new Dimension(600, 600));
+
+        sliceViewer3_ = new SliceViewer();
+        sliceViewer3_.setPreferredSize(new Dimension(600, 600));
+
+
+        add(volumeViewer_);
+        add(sliceViewer1_);
+        add(sliceViewer2_);
+        add(sliceViewer3_);
+    }
+
+    public static void main(String argv[]) {
+        ItkVtkTest itkVtkTest = new ItkVtkTest();
+        itkVtkTest.init();
+    }
+
+    public void sliceViewer(vtkImageData image) {
+        // set data
+        sliceViewer1_.setInput(image);
+        sliceViewer1_.setSliceOrientationToXY();
+        sliceViewer1_.setSlice(50);
+
+        sliceViewer2_.setInput(image);
+        sliceViewer2_.setSliceOrientationToXZ();
+        sliceViewer2_.setSlice(200);
+
+        sliceViewer3_.setInput(image);
+        sliceViewer3_.setSliceOrientationToYZ();
+        sliceViewer3_.setSlice(100);
+    }
+
+    public void renderVolume(vtkImageData image) {
+        volumeViewer_.setInput(image);
+    }
+
+    public vtkImageData loadDicomData() {
+        itkImageSS3 inputImage;
+        vtkImageData outputImage;
+
+        itkImageToVTKImageFilterISS3 itkVtkFilter;
+
+        itkVtkFilter = new itkImageToVTKImageFilterISS3();
+
+        // dicom load
+        String currentDir = System.getProperty("user.dir");
+        String path = currentDir + "/src/test/resources/13614193285030022";
+
+        DicomParser parser = new DicomParser(path);
+
+        String[] uIds = parser.getUidList();
+        Metadata data = parser.getMetadataByUid(uIds[0]);
+
+        System.out.println(data.toString());
+
+        outputImage = VtkImageArchive.getInstance().getVtkImage(uIds[0]); //parser.getVtkImageByUid(uIds[0]);
+
+        return outputImage;
+    }
+
+    public void init() {
+        vtkImageData image = this.loadDicomData();
+
+        this.setPreferredSize(new Dimension(1024, 768));
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.pack();
+        this.setVisible(true);
+
+        this.sliceViewer(image);
+        this.renderVolume(image);
+    }
+
     public class SliceViewer extends JPanel {
         private vtkRenderWindowPanel renWin_;
         private vtkImageViewer2 viewer_;
@@ -60,7 +149,7 @@ public class ItkVtkTest extends JFrame {
 
             sliceMin = viewer_.GetSliceMin();
             sliceMax = viewer_.GetSliceMax();
-            sliceMiddle = (sliceMax-sliceMin)/2;
+            sliceMiddle = (sliceMax - sliceMin) / 2;
 
             viewer_.SetSlice(sliceMiddle);
 
@@ -168,98 +257,5 @@ public class ItkVtkTest extends JFrame {
 
             renWin_.Render();
         }
-    }
-
-
-    private VolumeViewer volumeViewer_;
-    private SliceViewer sliceViewer1_;
-    private SliceViewer sliceViewer2_;
-    private SliceViewer sliceViewer3_;
-
-
-    public ItkVtkTest() {
-        GridLayout testLayout = new GridLayout(2, 2);
-        setLayout(testLayout);
-
-        volumeViewer_ = new VolumeViewer();
-        volumeViewer_.setPreferredSize(new Dimension(600, 600));
-
-        // viewer initialize
-        sliceViewer1_ = new SliceViewer();
-        sliceViewer1_.setPreferredSize(new Dimension(600, 600));
-
-        sliceViewer2_ = new SliceViewer();
-        sliceViewer2_.setPreferredSize(new Dimension(600, 600));
-
-        sliceViewer3_ = new SliceViewer();
-        sliceViewer3_.setPreferredSize(new Dimension(600, 600));
-
-
-        add(volumeViewer_);
-        add(sliceViewer1_);
-        add(sliceViewer2_);
-        add(sliceViewer3_);
-    }
-
-
-    public void sliceViewer(vtkImageData image) {
-        // set data
-        sliceViewer1_.setInput(image);
-        sliceViewer1_.setSliceOrientationToXY();
-        sliceViewer1_.setSlice(50);
-
-        sliceViewer2_.setInput(image);
-        sliceViewer2_.setSliceOrientationToXZ();
-        sliceViewer2_.setSlice(200);
-
-        sliceViewer3_.setInput(image);
-        sliceViewer3_.setSliceOrientationToYZ();
-        sliceViewer3_.setSlice(100);
-    }
-
-    public void renderVolume(vtkImageData image) {
-        volumeViewer_.setInput(image);
-    }
-
-
-    public vtkImageData loadDicomData() {
-        itkImageSS3 inputImage;
-        vtkImageData outputImage;
-
-        itkImageToVTKImageFilterISS3 itkVtkFilter;
-
-        itkVtkFilter = new itkImageToVTKImageFilterISS3();
-
-        // dicom load
-        String currentDir = System.getProperty("user.dir");
-        String path = currentDir + "/src/test/resources/13614193285030022";
-
-        DicomParser parser = new DicomParser(path);
-
-        String[] uIds = parser.getUidList();
-        Metadata data = parser.getMetadataByUid(uIds[0]);
-
-        System.out.println(data.toString());
-
-        outputImage = VtkImageArchive.getInstance().getVtkImage(uIds[0]); //parser.getVtkImageByUid(uIds[0]);
-
-        return outputImage;
-    }
-
-    public void init() {
-        vtkImageData image = this.loadDicomData();
-
-        this.setPreferredSize(new Dimension(1024, 768));
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.pack();
-        this.setVisible(true);
-
-        this.sliceViewer(image);
-        this.renderVolume(image);
-    }
-
-    public static void main(String argv[]) {
-        ItkVtkTest itkVtkTest = new ItkVtkTest();
-        itkVtkTest.init();
     }
 }
