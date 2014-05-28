@@ -23,10 +23,19 @@ public class VtkView  extends JDialog {
         JPanel paneLeft = new JPanel();
         getContentPane().add(paneLeft, BorderLayout.WEST);
 
+        JPanel paneBoxLeft = new JPanel();
+        paneBoxLeft.setLayout(new BoxLayout(paneBoxLeft, BoxLayout.Y_AXIS));
+        paneLeft.add(paneBoxLeft);
+
         final JXTable optionTable = new JXTable(new OptionTableModel());
         optionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         optionTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        paneLeft.add(optionTable);
+        paneBoxLeft.add(optionTable);
+
+        JButton btnQuery = new JButton("Query");
+        paneBoxLeft.add(btnQuery);
+        JButton btnSend = new JButton("Sned");
+        paneBoxLeft.add(btnSend);
 
         JPanel paneCenter = new JPanel();
         paneCenter.setLayout(new BorderLayout());
