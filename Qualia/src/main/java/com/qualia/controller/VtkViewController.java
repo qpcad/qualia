@@ -10,10 +10,11 @@ import java.util.*;
 
 public class VtkViewController {
     public VtkViewController(JFrame frame, Metadata target){
-        JDialog dialog = new VtkView(target, this);
+        VtkView dialog = new VtkView(target, this);
         dialog.pack();
         dialog.setVisible(true);
 
+        dialog.setModel(target);
     }
 
     public void onModule1BtnClicked(JXTable optionTable){

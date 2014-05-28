@@ -54,6 +54,12 @@ public class MainView extends JFrame {
 		JButton toolbarBtnSearch = new JButton("Search");
 		toolBar.add(toolbarBtnSearch);
 
+        JButton btnQuery = new JButton("Query");
+        toolBar.add(btnQuery);
+
+        JButton btnSend = new JButton("Send");
+        toolBar.add(btnSend);
+
 		JButton toolbarBtnEtc = new JButton("Etc");
 		toolBar.add(toolbarBtnEtc);
 
@@ -94,7 +100,6 @@ public class MainView extends JFrame {
 	}
 
     public void init(){
-
         this.setPreferredSize(new Dimension(1024, 768));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
@@ -105,7 +110,7 @@ public class MainView extends JFrame {
         mTreeTable.updateUI();
     }
 
-    public void updateRightPenel(vtkImageViewer2 imageViewer){
+    public void updateRightPanel(vtkImageViewer2 imageViewer){
         imageViewer.SetRenderWindow(mRightPanel.GetRenderWindow());
         imageViewer.SetupInteractor(mRightPanel.GetRenderWindow().GetInteractor());
 

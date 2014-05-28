@@ -6,7 +6,15 @@ import vtk.vtkImageViewer2;
 import vtk.vtkInteractorStyleImage;
 import vtk.vtkRenderWindowPanel;
 
-public class VtkSliceRenderPanel extends vtkRenderWindowPanel {
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+
+
+public class VtkSliceRenderPanel extends JPanel implements ChangeListener, MouseWheelListener{
 
     public final static int ORIENTATION_XY = 0;
     public final static int ORIENTATION_YZ = 1;
@@ -14,36 +22,54 @@ public class VtkSliceRenderPanel extends vtkRenderWindowPanel {
 
     private Metadata mModel;
     private vtkImageViewer2 mVtkImageViewer;
+    private vtkRenderWindowPanel mRenderWindowPanel;
+    private JSlider mSlider;
     private int mColorLevel = -500;
     private int mColorWindow = 3000;
 
-    public VtkSliceRenderPanel(Metadata model) {
-        super();
-        mVtkImageViewer = new vtkImageViewer2();
-        setInteractorStyle(new vtkInteractorStyleImage());
+    public VtkSliceRenderPanel(Metadata target) {
+        mModel = target;
 
-        setModel(model);
+        mVtkImageViewer = new vtkImageViewer2();
+        mRenderWindowPanel = new vtkRenderWindowPanel();
+        mSlider = new JSlider();
+        mRenderWindowPanel.setInteractorStyle(new vtkInteractorStyleImage());
+
+        setLayout(new BorderLayout());
+        add(mRenderWindowPanel, BorderLayout.CENTER);
+        add(mSlider, BorderLayout.SOUTH);
+
+        mSlider.addChangeListener(this);
+        addMouseWheelListener(this);
     }
 
-    public void setModel(Metadata model){
+    public void render(Metadata model, int orientation){
         mModel = model;
 
+        mRenderWindowPanel.Render();
+
         mVtkImageViewer.SetInputData(VtkImageArchive.getInstance().getVtkImage(mModel.uId));
+        setOrientation(orientation);
+
+        mVtkImageViewer.SetRenderWindow(mRenderWindowPanel.GetRenderWindow());
+        mVtkImageViewer.SetupInteractor(mRenderWindowPanel.GetRenderWindow().GetInteractor());
 
         mVtkImageViewer.GetRenderer().ResetCamera();
 
-        mVtkImageViewer.SetRenderWindow(this.GetRenderWindow());
-        mVtkImageViewer.SetupInteractor(this.GetRenderWindow().GetInteractor());
-
         mVtkImageViewer.SetColorLevel(mColorLevel);
         mVtkImageViewer.SetColorWindow(mColorWindow);
+
 
         int sliceMin, sliceMax;
         sliceMin = mVtkImageViewer.GetSliceMin();
         sliceMax = mVtkImageViewer.GetSliceMax();
 
-        mVtkImageViewer.SetSlice((sliceMax-sliceMin)/2);
+        mSlider.setMaximum(sliceMax);
+        mSlider.setMinimum(sliceMin);
 
+        setSliceIndex((sliceMax - sliceMin) / 2);
+
+        mVtkImageViewer.Render();
     }
 
     public void setOrientation(int orientation){
@@ -61,6 +87,22 @@ public class VtkSliceRenderPanel extends vtkRenderWindowPanel {
     }
 
     public void setSliceIndex(int index){
-        mVtkImageViewer.SetSlice(index);
+        mSlider.setValue(index);
+        mVtkImageViewer.Render();
+    }
+
+    @Override
+    public void stateChanged(ChangeEvent changeEvent) {
+        JSlider source = (JSlider) changeEvent.getSource();
+        if (!source.getValueIsAdjusting()) {
+            int value = source.getValue();
+            mVtkImageViewer.SetSlice(value);
+        }
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent mouseWheelEvent) {
+        int notches = mouseWheelEvent.getWheelRotation();
+        setSliceIndex(mSlider.getValue()+notches);
     }
 }

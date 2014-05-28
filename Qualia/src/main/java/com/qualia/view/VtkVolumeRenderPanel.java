@@ -8,13 +8,11 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
     private Metadata mModel;
 
     public VtkVolumeRenderPanel(Metadata model){
-        super();
-        this.setInteractorStyle(new vtkInteractorStyleTrackballCamera());
-
-        this.setModel(model);
+        setInteractorStyle(new vtkInteractorStyleTrackballCamera());
+        this.mModel = model;
     }
 
-    public void setModel(Metadata model){
+    public void render(Metadata model){
         this.mModel = model;
 
         vtkPiecewiseFunction opacityTransferFunction = new vtkPiecewiseFunction();
@@ -99,5 +97,6 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
         ren.AddVolume(volume);
         ren.ResetCamera(volume.GetBounds());
 
+        Render();
     }
 }

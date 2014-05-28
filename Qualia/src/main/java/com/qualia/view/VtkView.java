@@ -7,18 +7,20 @@ import org.jdesktop.swingx.JXTable;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 public class VtkView  extends JDialog {
-    private Metadata mTargetMetadata;
     private VtkViewController mController;
+    private Metadata mModel;
+    private VtkVolumeRenderPanel panelTopRight;
+    private VtkSliceRenderPanel panelTopLeft;
+    private VtkSliceRenderPanel panelBottomLeft;
+    private VtkSliceRenderPanel panelBottomRight;
 
 
-    public VtkView(Metadata target, VtkViewController controller){
-        mTargetMetadata = target;
+    public VtkView(Metadata model, VtkViewController controller) {
+        mModel = model;
         mController = controller;
-
 
         JPanel paneLeft = new JPanel();
         getContentPane().add(paneLeft, BorderLayout.WEST);
@@ -31,11 +33,6 @@ public class VtkView  extends JDialog {
         optionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         optionTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         paneBoxLeft.add(optionTable);
-
-        JButton btnQuery = new JButton("Query");
-        paneBoxLeft.add(btnQuery);
-        JButton btnSend = new JButton("Sned");
-        paneBoxLeft.add(btnSend);
 
         JPanel paneCenter = new JPanel();
         paneCenter.setLayout(new BorderLayout());
@@ -53,7 +50,7 @@ public class VtkView  extends JDialog {
         });
         toolBar.add(btnSetting);
 
-        JButton btnModule1 = new JButton("M1");
+        JButton btnModule1 = new JButton("Lung Segmentation");
         btnModule1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -62,7 +59,7 @@ public class VtkView  extends JDialog {
         });
         toolBar.add(btnModule1);
 
-        JButton btnModule2 = new JButton("M2");
+        JButton btnModule2 = new JButton("Nodule Candidate Detection");
         btnModule2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -71,7 +68,7 @@ public class VtkView  extends JDialog {
         });
         toolBar.add(btnModule2);
 
-        JButton btnModule3 = new JButton("M3");
+        JButton btnModule3 = new JButton("Nodule Classification");
         btnModule3.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -84,20 +81,30 @@ public class VtkView  extends JDialog {
 
         panelVtkRenderArea.setLayout(new GridLayout(2,2));
 
-        VtkSliceRenderPanel panelTopLeft = new VtkSliceRenderPanel(target);
-        panelTopLeft.setOrientation(VtkSliceRenderPanel.ORIENTATION_XY);
+        panelTopLeft = new VtkSliceRenderPanel(model);
+        panelTopLeft.setPreferredSize(new Dimension(400,400));
         panelVtkRenderArea.add(panelTopLeft);
 
-        VtkVolumeRenderPanel panelTopRight = new VtkVolumeRenderPanel(target);
+        panelTopRight = new VtkVolumeRenderPanel(model);
+        panelTopRight.setPreferredSize(new Dimension(400,400));
         panelVtkRenderArea.add(panelTopRight);
 
-        VtkSliceRenderPanel panelBottomLeft = new VtkSliceRenderPanel(target);
-        panelBottomLeft.setOrientation(VtkSliceRenderPanel.ORIENTATION_YZ);
+        panelBottomLeft = new VtkSliceRenderPanel(model);
+        panelBottomLeft.setPreferredSize(new Dimension(400,400));
         panelVtkRenderArea.add(panelBottomLeft);
 
-        VtkSliceRenderPanel panelBottomRight = new VtkSliceRenderPanel(target);
-        panelBottomRight.setModel(mTargetMetadata);
-        panelBottomRight.setOrientation(VtkSliceRenderPanel.ORIENTATION_XZ);
+        panelBottomRight = new VtkSliceRenderPanel(model);
+        panelBottomRight.setPreferredSize(new Dimension(400,400));
         panelVtkRenderArea.add(panelBottomRight);
+    }
+
+    public void setModel(Metadata model) {
+        mModel = model;
+
+        panelTopRight.render(model);
+
+        panelTopLeft.render(model,VtkSliceRenderPanel.ORIENTATION_XY);
+        panelBottomLeft.render(model,VtkSliceRenderPanel.ORIENTATION_YZ);
+        panelBottomRight.render(model,VtkSliceRenderPanel.ORIENTATION_XZ);
     }
 }

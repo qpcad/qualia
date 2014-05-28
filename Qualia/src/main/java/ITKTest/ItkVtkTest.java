@@ -1,6 +1,7 @@
 package ITKTest;
 
 import com.qualia.helper.DicomParser;
+import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.Metadata;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
@@ -44,6 +45,8 @@ public class ItkVtkTest extends JFrame {
 
 
         public void setInput(vtkImageData image) {
+            renWin_.Render();
+
             viewer_.SetInputData(image);
 
             viewer_.GetRenderer().ResetCamera();
@@ -60,6 +63,8 @@ public class ItkVtkTest extends JFrame {
             sliceMiddle = (sliceMax-sliceMin)/2;
 
             viewer_.SetSlice(sliceMiddle);
+
+            renWin_.Render();
         }
     }
 
@@ -236,27 +241,25 @@ public class ItkVtkTest extends JFrame {
 
         System.out.println(data.toString());
 
-        outputImage = null; //parser.getVtkImageByUid(uIds[0]);
+        outputImage = VtkImageArchive.getInstance().getVtkImage(uIds[0]); //parser.getVtkImageByUid(uIds[0]);
 
         return outputImage;
     }
 
     public void init() {
+        vtkImageData image = this.loadDicomData();
 
         this.setPreferredSize(new Dimension(1024, 768));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         this.setVisible(true);
+
+        this.sliceViewer(image);
+        this.renderVolume(image);
     }
 
     public static void main(String argv[]) {
-
         ItkVtkTest itkVtkTest = new ItkVtkTest();
         itkVtkTest.init();
-
-        vtkImageData image = itkVtkTest.loadDicomData();
-
-        itkVtkTest.sliceViewer(image);
-        itkVtkTest.renderVolume(image);
     }
 }

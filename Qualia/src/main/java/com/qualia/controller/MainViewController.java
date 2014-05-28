@@ -97,7 +97,7 @@ public class MainViewController {
         imageViewer.SetInputData(VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId));
         imageViewer.GetRenderer().ResetCamera();
 
-        mMainView.updateRightPenel(imageViewer);
+        mMainView.updateRightPanel(imageViewer);
     }
 
     public void onTableDataDoubleClicked(Metadata targetMetadata){
