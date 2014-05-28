@@ -1,6 +1,5 @@
 package com.qualia.view;
 
-import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.Metadata;
 import vtk.*;
 
@@ -12,8 +11,8 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
         this.mModel = model;
     }
 
-    public void render(Metadata model){
-        this.mModel = model;
+    public void render(vtkImageData image) {
+
 
         vtkPiecewiseFunction opacityTransferFunction = new vtkPiecewiseFunction();
         opacityTransferFunction.AddPoint(0, 0.0);
@@ -74,7 +73,7 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
         volumeMapper.SetVolumeRayCastFunction(compositeFunction);
 
         cast.SetOutputScalarTypeToUnsignedChar();
-        cast.SetInputData(VtkImageArchive.getInstance().getVtkImage(model.uId));
+        cast.SetInputData(image);
         cast.Update();
 
         volumeMapper.SetInputData(cast.GetOutput());

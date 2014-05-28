@@ -1,7 +1,7 @@
 package com.qualia.view;
 
-import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.Metadata;
+import vtk.vtkImageData;
 import vtk.vtkImageViewer2;
 import vtk.vtkInteractorStyleImage;
 import vtk.vtkRenderWindowPanel;
@@ -14,7 +14,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 
-public class VtkSliceRenderPanel extends JPanel implements ChangeListener, MouseWheelListener{
+public class VtkSliceRenderPanel extends JPanel implements ChangeListener, MouseWheelListener {
 
     public final static int ORIENTATION_XY = 0;
     public final static int ORIENTATION_YZ = 1;
@@ -43,12 +43,10 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
         addMouseWheelListener(this);
     }
 
-    public void render(Metadata model, int orientation){
-        mModel = model;
-
+    public void render(vtkImageData image, int orientation) {
         mRenderWindowPanel.Render();
 
-        mVtkImageViewer.SetInputData(VtkImageArchive.getInstance().getVtkImage(mModel.uId));
+        mVtkImageViewer.SetInputData(image);
         setOrientation(orientation);
 
         mVtkImageViewer.SetRenderWindow(mRenderWindowPanel.GetRenderWindow());
@@ -72,8 +70,8 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
         mVtkImageViewer.Render();
     }
 
-    public void setOrientation(int orientation){
-        switch (orientation){
+    public void setOrientation(int orientation) {
+        switch (orientation) {
             case ORIENTATION_XY:
                 mVtkImageViewer.SetSliceOrientationToXY();
                 break;
@@ -86,7 +84,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
         }
     }
 
-    public void setSliceIndex(int index){
+    public void setSliceIndex(int index) {
         mSlider.setValue(index);
         mVtkImageViewer.Render();
     }
@@ -103,6 +101,6 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
     @Override
     public void mouseWheelMoved(MouseWheelEvent mouseWheelEvent) {
         int notches = mouseWheelEvent.getWheelRotation();
-        setSliceIndex(mSlider.getValue()+notches);
+        setSliceIndex(mSlider.getValue() + notches);
     }
 }

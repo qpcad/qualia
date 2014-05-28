@@ -1,13 +1,18 @@
 package com.qualia.view;
 
 import com.qualia.controller.VtkViewController;
+import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
+import org.itk.itkcommon.itkImageSS3;
+import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
 import org.jdesktop.swingx.JXTable;
+import vtk.vtkImageData;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class VtkView  extends JDialog {
     private VtkViewController mController;
@@ -100,11 +105,30 @@ public class VtkView  extends JDialog {
 
     public void setModel(Metadata model) {
         mModel = model;
+        vtkImageData image = VtkImageArchive.getInstance().getVtkImage(model.uId);
 
-        panelTopRight.render(model);
+        render(image);
+    }
 
-        panelTopLeft.render(model,VtkSliceRenderPanel.ORIENTATION_XY);
-        panelBottomLeft.render(model,VtkSliceRenderPanel.ORIENTATION_YZ);
-        panelBottomRight.render(model,VtkSliceRenderPanel.ORIENTATION_XZ);
+    public void render(vtkImageData image) {
+        panelTopRight.render(image);
+
+        panelTopLeft.render(image, VtkSliceRenderPanel.ORIENTATION_XY);
+        panelBottomLeft.render(image, VtkSliceRenderPanel.ORIENTATION_YZ);
+        panelBottomRight.render(image, VtkSliceRenderPanel.ORIENTATION_XZ);
+    }
+
+
+    public void renderItkImage(itkImageSS3 image) {
+        vtkImageData outputImage;
+
+        itkImageToVTKImageFilterISS3 itkVtkFilter;
+
+        itkVtkFilter = new itkImageToVTKImageFilterISS3();
+        itkVtkFilter.SetInput(image);
+        itkVtkFilter.Update();
+        outputImage = itkVtkFilter.GetOutput();
+
+        render(outputImage);
     }
 }

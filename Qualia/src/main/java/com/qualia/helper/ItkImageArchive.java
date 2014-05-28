@@ -4,28 +4,27 @@ import org.itk.itkcommon.itkImageSS3;
 
 import java.util.HashMap;
 
-public class ItkIamgeArchive {
+public class ItkImageArchive {
+    private static ItkImageArchive mInstance = null;
     HashMap<String, itkImageSS3> mMap;
 
-    private static ItkIamgeArchive mInstance = null;
-
-    private ItkIamgeArchive(){
+    private ItkImageArchive() {
         mMap = new HashMap<String, itkImageSS3>();
     }
 
-    public static ItkIamgeArchive getInstance(){
+    public static ItkImageArchive getInstance() {
         if(mInstance==null){
-            mInstance = new ItkIamgeArchive();
+            mInstance = new ItkImageArchive();
         }
 
         return mInstance;
     }
 
-    public void setVtkImage(String uId, itkImageSS3 imageData){
+    public void setItkImage(String uId, itkImageSS3 imageData) {
         mMap.put(uId, imageData);
     }
 
-    public itkImageSS3 getVtkImage(String uId){
+    public itkImageSS3 getItkImage(String uId) {
         return mMap.get(uId);
     }
 }
