@@ -86,7 +86,7 @@ public class NoduleCandidatesDetection implements Runnable {
         addImageFilterISS3ISS3ISS3.SetInput1(lungSegImage);
         addImageFilterISS3ISS3ISS3.SetInput2(maskImageFilterISS3IUC3ISS3.GetOutput());
 
-        maskImageFilterISS3IUC3ISS3.SetOutsideValue((short) -500);
+        maskImageFilterISS3IUC3ISS3.SetOutsideValue((short) -300);
 
         addImageFilterISS3ISS3ISS3.Update();
 
@@ -154,16 +154,23 @@ public class NoduleCandidatesDetection implements Runnable {
                     labelMapFilter.GetOutput().RemoveLabel(l);
                     continue;
                 }
-                if (volume > ((30 / 2) ^ 3) * Math.PI * 4 / 3 || (volume > ((3 / 2) ^ 3) * Math.PI * 4 / 3 && ee > 2)) { // vessel
+                if (volume > ((30 / 2) ^ 3) * Math.PI * 4 / 3 || (volume > ((3 / 2) ^ 3) * Math.PI * 4 / 3 && ee > 4)) { // vessel
                     if (thresholdList[i] > -600) {
-                        labelObject.SetLabel(i * 1000 + l);
+                        //labelObject.SetLabel(i * 1000 + l);
                         vesselMap.AddLabelObject(labelObject);
                     }
                     labelMapFilter.GetOutput().RemoveLabel(l);
                     continue;
                 }
-                if (vesselMap.GetPixel(labelObject.GetIndex(0)) > 0) {
-                    System.out.println("Overlap");
+                int overlap = 0;
+                for(int p = 0; p < pixels; p++){
+                    if(vesselMap.GetPixel(labelObject.GetIndex(p)) > 0)
+                        overlap++;
+                }
+                double ratio = overlap/pixels;
+                if (ratio > 0.5) {
+                    System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
+                    vesselMap.AddLabelObject(labelObject);
                     labelMapFilter.GetOutput().RemoveLabel(l);
                     continue;
                 }

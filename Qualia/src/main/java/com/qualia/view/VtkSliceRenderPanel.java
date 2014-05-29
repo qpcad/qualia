@@ -67,7 +67,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
 
         setSliceIndex((sliceMax - sliceMin) / 2);
 
-        mVtkImageViewer.Render();
+        mRenderWindowPanel.Render();
     }
 
     public void setOrientation(int orientation) {

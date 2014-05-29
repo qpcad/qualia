@@ -1,5 +1,7 @@
 package com.qualia.view;
 
+import ITKTest.ImageProcessingUtils;
+import com.jhlabs.image.ImageUtils;
 import com.qualia.controller.VtkViewController;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
@@ -130,37 +132,33 @@ public class VtkView  extends JDialog {
     }
 
     vtkImageData itkImageToVtkVolume(itkImageSS3 input) {
-        vtkImageData data = new vtkImageData();
-        vtkImageCast cast = new vtkImageCast();
-        itkImageUC3 image;
-        itkImageToVTKImageFilterIUC3 itkImageToVTKImageFilterIUC3 = new itkImageToVTKImageFilterIUC3();
-        itkRescaleIntensityImageFilterISS3IUC3 rescale = new itkRescaleIntensityImageFilterISS3IUC3();
+        vtkImageData outputImage;
+
+        ImageProcessingUtils.tic();
+
         itkThresholdImageFilterISS3 threshold_below = new itkThresholdImageFilterISS3();
         itkThresholdImageFilterISS3 threshold_above = new itkThresholdImageFilterISS3();
+        itkImageToVTKImageFilterIUC3 itkVtkFilter = new itkImageToVTKImageFilterIUC3();
+        itkRescaleIntensityImageFilterISS3IUC3 rescale = new itkRescaleIntensityImageFilterISS3IUC3();
 
         threshold_below.SetInput(input);
-        threshold_below.SetOutsideValue((short) -2000);
-        threshold_below.ThresholdBelow((short) -2000);
-
         threshold_above.SetInput(threshold_below.GetOutput());
+        rescale.SetInput(threshold_above.GetOutput());
+        itkVtkFilter.SetInput(rescale.GetOutput());
+
+        threshold_below.ThresholdBelow((short) -2000);
         threshold_below.SetOutsideValue((short) -2000);
-        threshold_below.ThresholdAbove((short) 1000);
 
-        rescale.SetInput(threshold_below.GetOutput());
-        rescale.Update();
-        image = rescale.GetOutput();
-
-        itkImageToVTKImageFilterIUC3.SetInput(image);
-        itkImageToVTKImageFilterIUC3.Update();
-
-        cast.SetInputData(itkImageToVTKImageFilterIUC3.GetOutput());
-        cast.SetOutput(data);
-
-        cast.SetOutputScalarTypeToUnsignedChar();
-        cast.Update();
+        threshold_above.ThresholdAbove((short) 1000);
+        threshold_above.SetOutsideValue((short) 1000);
 
 
-        return data;
+        itkVtkFilter.Update();
+
+        outputImage = itkVtkFilter.GetOutput();
+        ImageProcessingUtils.toc();
+
+        return outputImage;
     }
 
     vtkImageData itkImageToVtk(itkImageSS3 image) {
