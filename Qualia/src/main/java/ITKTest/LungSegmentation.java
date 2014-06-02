@@ -135,6 +135,9 @@ public class LungSegmentation implements Runnable {
         long maxIndex = 0;
         long maxIndex1 = 0;
 
+        itkLabelMap3 lungMap = new itkLabelMap3();
+        lungMap.CopyInformation(labelMap);
+
         for (long i = 1; i <= labelMap.GetNumberOfLabelObjects(); i++) {
             itkShapeLabelObjectUL3 labelObject = labelMap.GetLabelObject(i);
 
@@ -151,18 +154,15 @@ public class LungSegmentation implements Runnable {
             }
         }
 
-        // removing other parts
-        long numbers = labelMap.GetNumberOfLabelObjects();
-        for (long i = 1; i <= numbers; i++) {
-            if (i != maxIndex && (maxVolume1 < maxVolume / 2 || i != maxIndex1)) {
-                labelMap.RemoveLabel(i);
-            }
-        }
+        // extract lung
+        lungMap.AddLabelObject(labelMap.GetLabelObject(maxIndex));
+        if (maxVolume > maxVolume1 * 2)
+            lungMap.AddLabelObject(labelMap.GetLabelObject(maxIndex1));
 
         System.out.printf("%d, %d, %d, %d\n", maxIndex, maxVolume, maxIndex1,
                 maxVolume1);
 
-        return labelMap;
+        return lungMap;
     }
 
     /**

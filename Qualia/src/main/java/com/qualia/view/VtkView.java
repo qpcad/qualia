@@ -1,27 +1,28 @@
 package com.qualia.view;
 
 import ITKTest.ImageProcessingUtils;
-import com.jhlabs.image.ImageUtils;
 import com.qualia.controller.VtkViewController;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
 import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkcommon.itkImageUC3;
 import org.itk.itkimageintensity.itkRescaleIntensityImageFilterISS3IUC3;
+import org.itk.itklabelmap.itkLabelMap3;
+import org.itk.itklabelmap.itkLabelMapToBinaryImageFilterLM3IUC3;
 import org.itk.itkthresholding.itkThresholdImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterIUC3;
 import org.jdesktop.swingx.JXTable;
-import vtk.vtkImageCast;
+import vtk.vtkConnectivityFilter;
 import vtk.vtkImageData;
+import vtk.vtkUnstructuredGrid;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class VtkView  extends JDialog {
+public class VtkView extends JDialog {
     private VtkViewController mController;
     private Metadata mModel;
     private VtkVolumeRenderPanel panelTopRight;
@@ -91,22 +92,22 @@ public class VtkView  extends JDialog {
         JPanel panelVtkRenderArea = new JPanel();
         paneCenter.add(panelVtkRenderArea, BorderLayout.CENTER);
 
-        panelVtkRenderArea.setLayout(new GridLayout(2,2));
+        panelVtkRenderArea.setLayout(new GridLayout(2, 2));
 
         panelTopLeft = new VtkSliceRenderPanel(model);
-        panelTopLeft.setPreferredSize(new Dimension(400,400));
+        panelTopLeft.setPreferredSize(new Dimension(400, 400));
         panelVtkRenderArea.add(panelTopLeft);
 
         panelTopRight = new VtkVolumeRenderPanel(model);
-        panelTopRight.setPreferredSize(new Dimension(400,400));
+        panelTopRight.setPreferredSize(new Dimension(400, 400));
         panelVtkRenderArea.add(panelTopRight);
 
         panelBottomLeft = new VtkSliceRenderPanel(model);
-        panelBottomLeft.setPreferredSize(new Dimension(400,400));
+        panelBottomLeft.setPreferredSize(new Dimension(400, 400));
         panelVtkRenderArea.add(panelBottomLeft);
 
         panelBottomRight = new VtkSliceRenderPanel(model);
-        panelBottomRight.setPreferredSize(new Dimension(400,400));
+        panelBottomRight.setPreferredSize(new Dimension(400, 400));
         panelVtkRenderArea.add(panelBottomRight);
     }
 
@@ -129,6 +130,10 @@ public class VtkView  extends JDialog {
 
     public void renderVolume(vtkImageData image) {
         panelTopRight.render(image);
+    }
+
+    public void renderVolume(vtkUnstructuredGrid grid) {
+        panelTopRight.render(grid);
     }
 
     vtkImageData itkImageToVtkVolume(itkImageSS3 input) {
@@ -161,6 +166,42 @@ public class VtkView  extends JDialog {
         return outputImage;
     }
 
+    vtkUnstructuredGrid itkLabelMapToVtkData(itkLabelMap3 input) {
+        vtkUnstructuredGrid outputGrid;
+        vtkImageData outputImage;
+
+        itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
+        itkImageToVTKImageFilterIUC3 itkVtkFilter = new itkImageToVTKImageFilterIUC3();
+
+        ImageProcessingUtils.tic();
+
+        labelMapToBinaryImageFilter.SetInput(input);
+        itkVtkFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
+        itkVtkFilter.Update();
+
+        outputImage = itkVtkFilter.GetOutput();
+
+        ImageProcessingUtils.toc();
+
+        // vtk part TODO too slow and it is not w
+        vtkConnectivityFilter connectivityFilter = new vtkConnectivityFilter();
+        connectivityFilter.SetInputData(outputImage);
+        //connectivityFilter.SetExtractionModeToAllRegions();
+        //connectivityFilter.ColorRegionsOn();
+        connectivityFilter.ScalarConnectivityOn();
+        //connectivityFilter.SetScalarRange(1,255);
+        System.out.println(connectivityFilter);
+
+        connectivityFilter.Update();
+
+
+        outputGrid = connectivityFilter.GetOutput();
+
+        ImageProcessingUtils.toc();
+
+        return outputGrid;
+    }
+
     vtkImageData itkImageToVtk(itkImageSS3 image) {
         vtkImageData outputImage;
 
@@ -177,5 +218,10 @@ public class VtkView  extends JDialog {
     public void renderItkImage(itkImageSS3 image) {
         renderSlice(itkImageToVtk(image));
         renderVolume(itkImageToVtkVolume(image));
+    }
+
+    public void renderItkImage(itkImageSS3 image, itkLabelMap3 labelMap) {
+        renderSlice(itkImageToVtk(image));
+        renderVolume(itkLabelMapToVtkData(labelMap));
     }
 }

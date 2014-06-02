@@ -11,7 +11,62 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
         this.mModel = model;
     }
 
+    public void render(vtkUnstructuredGrid grid) {
+        vtkDataSetMapper mapper = new vtkDataSetMapper();
+        mapper.SetInputData(grid);
+        mapper.Update();
+
+        vtkActor actor = new vtkActor();
+        actor.SetMapper(mapper);
+
+        vtkRenderer ren = new vtkRenderer();
+
+        this.GetRenderWindow().GetRenderers().RemoveAllItems();
+        this.GetRenderWindow().AddRenderer(ren);
+
+        ren.AddActor(actor);
+
+        Render();
+    }
+
     public void render(vtkImageData image) {
+        vtkImageCast cast = new vtkImageCast();
+        cast.SetOutputScalarTypeToUnsignedChar();
+        cast.SetInputData(image);
+        cast.Update();
+
+        vtkVolumeProperty volumeProperty = getVtkVolumeProperty();
+
+        // The mapper / ray cast function know how to render the data
+        vtkVolumeRayCastCompositeFunction compositeFunction = new vtkVolumeRayCastCompositeFunction();
+        vtkVolumeRayCastMapper volumeMapper = new vtkVolumeRayCastMapper();
+
+
+        volumeMapper.SetVolumeRayCastFunction(compositeFunction);
+        volumeMapper.SetInputData(cast.GetOutput());
+
+        // The volume holds the mapper and the property and
+        // can be used to position/orient the volume
+        vtkVolume volume = new vtkVolume();
+        volume.SetMapper(volumeMapper);
+        volume.SetProperty(volumeProperty);
+
+
+        vtkRenderer ren = new vtkRenderer();
+
+        this.GetRenderWindow().GetRenderers().RemoveAllItems();
+        this.GetRenderWindow().AddRenderer(ren);
+
+
+        if (ren.GetViewProps().GetNumberOfItems() > 0)
+            ren.RemoveVolume(ren.GetViewProps().GetLastProp());
+        ren.AddVolume(volume);
+        ren.ResetCamera(volume.GetBounds());
+
+        Render();
+    }
+
+    public vtkVolumeProperty getVtkVolumeProperty() { // TODO it needs GUI for adjusting the function parameters
         vtkPiecewiseFunction opacityTransferFunction = new vtkPiecewiseFunction();
         opacityTransferFunction.AddPoint(0, 0.0);
         //opacityTransferFunction.AddPoint(8, 0.0);
@@ -64,37 +119,6 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
         volumeProperty.ShadeOn();
         volumeProperty.SetInterpolationTypeToLinear();
 
-        // The mapper / ray cast function know how to render the data
-        vtkVolumeRayCastCompositeFunction compositeFunction = new vtkVolumeRayCastCompositeFunction();
-        vtkVolumeRayCastMapper volumeMapper = new vtkVolumeRayCastMapper();
-        vtkImageCast cast = new vtkImageCast();
-
-        volumeMapper.SetVolumeRayCastFunction(compositeFunction);
-
-        cast.SetOutputScalarTypeToUnsignedChar();
-        cast.SetInputData(image);
-        cast.Update();
-
-        volumeMapper.SetInputData(cast.GetOutput());
-
-        // The volume holds the mapper and the property and
-        // can be used to position/orient the volume
-        vtkVolume volume = new vtkVolume();
-        volume.SetMapper(volumeMapper);
-        volume.SetProperty(volumeProperty);
-
-
-        vtkRenderer ren = new vtkRenderer();
-
-        this.GetRenderWindow().GetRenderers().RemoveAllItems();
-        this.GetRenderWindow().AddRenderer(ren);
-
-
-        if (ren.GetViewProps().GetNumberOfItems() > 0)
-            ren.RemoveVolume(ren.GetViewProps().GetLastProp());
-        ren.AddVolume(volume);
-        ren.ResetCamera(volume.GetBounds());
-
-        Render();
+        return volumeProperty;
     }
 }
