@@ -89,7 +89,8 @@ public class VtkViewController {
 
 
         /* To Viewer */
-        dialog.renderItkImage(lungSegImage, noduleCandidateDetection.getNoduleCandidates());
+        dialog.renderItkImage(noduleCandidateDetection.getNoduleCandidatesLabel());
+        //dialog.renderItkImage(lungSegImage, noduleCandidateDetection.getNoduleCandidates());
     }
 
 

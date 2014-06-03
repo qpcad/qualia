@@ -6,6 +6,7 @@ import org.itk.itkcommon.itkImageUC3;
 import org.itk.itkcommon.itkSize2;
 import org.itk.itkcommon.itkVectorD3;
 import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
+import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
 import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
@@ -22,6 +23,7 @@ import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
  */
 public class NoduleCandidatesDetection implements Runnable {
     private itkImageSS3 lungImage_;
+    private itkImageSS3 noduleCandidatesLabel_;
     private itkImageUC3 lungMask_;
     private itkImageUC3 noduleCandidatesMask_;
     private itkLabelMap3 noduleCandidates_;
@@ -79,6 +81,28 @@ public class NoduleCandidatesDetection implements Runnable {
 
         System.out.println("Vessel Objects " + vesselMap_.GetNumberOfLabelObjects());
         System.out.println("Objects " + noduleCandidates_.GetNumberOfLabelObjects());
+
+        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
+        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
+        itkAddImageFilterISS3ISS3ISS3 addImageFilter = new itkAddImageFilterISS3ISS3ISS3();
+        itkAddImageFilterISS3ISS3ISS3 addImageFilter1 = new itkAddImageFilterISS3ISS3ISS3();
+
+        maskImageFilter.SetConstant1((short) 1500);
+        maskImageFilter.SetMaskImage(noduleCandidatesMask_);
+        maskImageFilter1.SetConstant1((short) 100);
+        maskImageFilter1.SetMaskImage(vesselMask_);
+
+        addImageFilter.SetInput1(lungSegImage);
+        addImageFilter.SetInput2(maskImageFilter.GetOutput());
+        addImageFilter1.SetInput1(addImageFilter.GetOutput());
+        addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
+
+        maskImageFilter.SetOutsideValue((short) -500);
+        maskImageFilter1.SetOutsideValue((short) -500);
+
+        addImageFilter1.Update();
+
+        noduleCandidatesLabel_ = addImageFilter1.GetOutput();
     }
 
     /**
@@ -98,8 +122,8 @@ public class NoduleCandidatesDetection implements Runnable {
         vesselMap_.CopyInformation(lungSegImage);
         noduleCandidates_.CopyInformation(lungSegImage);
 
-        short thresholdList[] = {-800, -700, -600, -500, -400, -300, -200, -600, -500, -400, -300, -200, -600, -300};
-        int openRadiusList[] = {1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3};
+        short thresholdList[] = {-800, -700, -600, -600, -600, -500, -500, -400, -400, -300, -300, -300, -200, -200};
+        int openRadiusList[] = {1, 1, 1, 2, 3, 1, 2, 1, 2, 1, 2, 3, 1, 2};
         long new_label = 0;
         long new_vlabel = 0;
 
@@ -138,7 +162,7 @@ public class NoduleCandidatesDetection implements Runnable {
 
                 // TODO this filter is not accurate
                 //if (labelObject.GetEquivalentSphericalRadius() < 1.5 || volume < ((3 / 2) ^ 3) * Math.PI * 4 / 3) { // small objects
-                if (labelObject.GetEquivalentSphericalRadius() < 3 || volume < ((4 / 2) ^ 3) * Math.PI * 4 / 3) {
+                if (labelObject.GetEquivalentSphericalRadius() < 2 || volume < ((4 / 2) ^ 3) * Math.PI * 4 / 3) {
                     continue;
                 }
                 if (labelObject.GetEquivalentSphericalRadius() > 15 || volume > ((30 / 2) ^ 3) * Math.PI * 4 / 3) { // huge object
@@ -151,6 +175,7 @@ public class NoduleCandidatesDetection implements Runnable {
                 if (ee > 4) { // vessel - elongated object
                     labelObject.SetLabel(++new_vlabel);
                     vesselMap_.AddLabelObject(labelObject);
+                    System.out.println("Elongation:" + ee);
 
                     continue;
                 }
@@ -161,8 +186,9 @@ public class NoduleCandidatesDetection implements Runnable {
                         overlap++;
                 }
                 double ratio = overlap / pixels;
+                System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
                 if (ratio > 0.3) {
-                    System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
+
                     labelObject.SetLabel(++new_vlabel);
                     vesselMap_.AddLabelObject(labelObject);
                     continue;
@@ -210,4 +236,7 @@ public class NoduleCandidatesDetection implements Runnable {
         //ImageProcessingUtils.writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");
     }
 
+    public itkImageSS3 getNoduleCandidatesLabel() {
+        return noduleCandidatesLabel_;
+    }
 }
