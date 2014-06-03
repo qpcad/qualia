@@ -13,9 +13,7 @@ import org.itk.itkthresholding.itkThresholdImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterIUC3;
 import org.jdesktop.swingx.JXTable;
-import vtk.vtkConnectivityFilter;
 import vtk.vtkImageData;
-import vtk.vtkUnstructuredGrid;
 
 import javax.swing.*;
 import java.awt.*;
@@ -132,10 +130,6 @@ public class VtkView extends JDialog {
         panelTopRight.render(image);
     }
 
-    public void renderVolume(vtkUnstructuredGrid grid) {
-        panelTopRight.render(grid);
-    }
-
     vtkImageData itkImageToVtkVolume(itkImageSS3 input) {
         vtkImageData outputImage;
 
@@ -166,14 +160,11 @@ public class VtkView extends JDialog {
         return outputImage;
     }
 
-    vtkUnstructuredGrid itkLabelMapToVtkData(itkLabelMap3 input) {
-        vtkUnstructuredGrid outputGrid;
+    vtkImageData itkLabelMapToVtkVolume(itkLabelMap3 input) {
         vtkImageData outputImage;
 
         itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
         itkImageToVTKImageFilterIUC3 itkVtkFilter = new itkImageToVTKImageFilterIUC3();
-
-        ImageProcessingUtils.tic();
 
         labelMapToBinaryImageFilter.SetInput(input);
         itkVtkFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
@@ -181,25 +172,7 @@ public class VtkView extends JDialog {
 
         outputImage = itkVtkFilter.GetOutput();
 
-        ImageProcessingUtils.toc();
-
-        // vtk part TODO too slow and it is not w
-        vtkConnectivityFilter connectivityFilter = new vtkConnectivityFilter();
-        connectivityFilter.SetInputData(outputImage);
-        //connectivityFilter.SetExtractionModeToAllRegions();
-        //connectivityFilter.ColorRegionsOn();
-        connectivityFilter.ScalarConnectivityOn();
-        //connectivityFilter.SetScalarRange(1,255);
-        System.out.println(connectivityFilter);
-
-        connectivityFilter.Update();
-
-
-        outputGrid = connectivityFilter.GetOutput();
-
-        ImageProcessingUtils.toc();
-
-        return outputGrid;
+        return outputImage;
     }
 
     vtkImageData itkImageToVtk(itkImageSS3 image) {
@@ -222,6 +195,6 @@ public class VtkView extends JDialog {
 
     public void renderItkImage(itkImageSS3 image, itkLabelMap3 labelMap) {
         renderSlice(itkImageToVtk(image));
-        renderVolume(itkLabelMapToVtkData(labelMap));
+        renderVolume(itkLabelMapToVtkVolume(labelMap));
     }
 }

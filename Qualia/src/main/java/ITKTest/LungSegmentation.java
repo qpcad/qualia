@@ -156,7 +156,7 @@ public class LungSegmentation implements Runnable {
 
         // extract lung
         lungMap.AddLabelObject(labelMap.GetLabelObject(maxIndex));
-        if (maxVolume > maxVolume1 * 2)
+        if (maxVolume < maxVolume1 * 2)
             lungMap.AddLabelObject(labelMap.GetLabelObject(maxIndex1));
 
         System.out.printf("%d, %d, %d, %d\n", maxIndex, maxVolume, maxIndex1,

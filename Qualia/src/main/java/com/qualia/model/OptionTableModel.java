@@ -1,9 +1,10 @@
 package com.qualia.model;
 
 import javax.swing.table.AbstractTableModel;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Vector;
 
-public class OptionTableModel extends AbstractTableModel{
+public class OptionTableModel extends AbstractTableModel {
 
     HashMap<String, String> mMap = new HashMap<String, String>();
     Vector<String> mKeyList = new Vector<String>();
@@ -13,22 +14,22 @@ public class OptionTableModel extends AbstractTableModel{
             "Key", "Value"
     };
 
-    public OptionTableModel(){
+    public OptionTableModel() {
         HashMap<String, String> optionMap = new HashMap<String, String>();
         this.setOptionMap(optionMap);
     }
 
-    public void setOptionMap(HashMap<String, String> map){
+    public void setOptionMap(HashMap<String, String> map) {
         this.mMap = map;
 
         mKeyList.clear();
-        for(String key : mMap.keySet()){
+        for (String key : mMap.keySet()) {
             mKeyList.add(key);
             System.out.println(key);
         }
 
         mValueList.clear();
-        for(String value : mMap.values()){
+        for (String value : mMap.values()) {
             mValueList.add(value);
             System.out.println(value);
         }
@@ -52,15 +53,15 @@ public class OptionTableModel extends AbstractTableModel{
 
     @Override
     public Object getValueAt(int row, int col) {
-        if(col==0){
+        if (col == 0) {
             return mKeyList.get(row);
-        }else{
+        } else {
             return mValueList.get(row);
         }
     }
 
     @Override
     public boolean isCellEditable(int row, int col) {
-        return (col==1);
+        return (col == 1);
     }
 }

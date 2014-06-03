@@ -17,10 +17,8 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 
 public class MainViewController {
-    private MainView mMainView;
-
     private final static String DATABASE_URL = "jdbc:sqlite:qualia.db:metadata";
-
+    private MainView mMainView;
     private ConnectionSource connectionSource = null;
     private Dao<Metadata, Integer> metadataDao;
 
@@ -28,22 +26,26 @@ public class MainViewController {
 
     private VtkViewController mVtkViwerController;
 
-    public MainViewController(){
+    public MainViewController() {
         this.init();
 
         mMainView = new MainView(this, mMetaTableModel);
         mMainView.init();
     }
 
+    public static void main(String[] args) throws Exception {
+        new MainViewController();
+    }
+
     private void init() {
-        try{
+        try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             metadataDao = DaoManager.createDao(connectionSource, Metadata.class);
 
             TableUtils.dropTable(connectionSource, Metadata.class, true);
             TableUtils.createTable(connectionSource, Metadata.class);
 
-        }catch(Exception e){
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(mMainView, "Database error");
         }
 
@@ -64,20 +66,20 @@ public class MainViewController {
 
             String[] uIds = parser.getUidList();
 
-            for(int i=0;i<uIds.length;i++){
+            for (int i = 0; i < uIds.length; i++) {
                 Metadata data = parser.getMetadataByUid(uIds[i]);
 
-                try{
+                try {
                     metadataDao.create(data);
-                }catch (Exception e){
+                } catch (Exception e) {
                     JOptionPane.showMessageDialog(mMainView, "Database error");
                 }
             }
 
-            try{
+            try {
                 metadataDao.queryForAll();
                 mMetaTableModel.updatePatientList(metadataDao);
-            }catch(Exception e){
+            } catch (Exception e) {
                 JOptionPane.showMessageDialog(mMainView, "Database error");
             }
             mMainView.updateMetaTable();
@@ -88,7 +90,7 @@ public class MainViewController {
         }
     }
 
-    public void onTableDataClicked(Metadata targetMetadata){
+    public void onTableDataClicked(Metadata targetMetadata) {
         System.out.println("clicked");
         System.out.println(targetMetadata.toString());
 
@@ -100,13 +102,8 @@ public class MainViewController {
         mMainView.updateRightPanel(imageViewer);
     }
 
-    public void onTableDataDoubleClicked(Metadata targetMetadata){
+    public void onTableDataDoubleClicked(Metadata targetMetadata) {
         mVtkViwerController = new VtkViewController(mMainView, targetMetadata);
-    }
-
-
-    public static void main(String[] args) throws Exception {
-        new MainViewController();
     }
 
 

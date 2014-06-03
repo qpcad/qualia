@@ -31,7 +31,7 @@ public class VtkViewController {
         dialog.setModel(model);
     }
 
-    public void onModule1BtnClicked(JXTable optionTable){
+    public void onModule1BtnClicked(JXTable optionTable) {
         OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
         HashMap<String, String> map = new HashMap<String, String>();
@@ -66,7 +66,7 @@ public class VtkViewController {
         dialog.renderItkImage(lungSegImage);
     }
 
-    public void onModule2BtnClicked(JXTable optionTable){
+    public void onModule2BtnClicked(JXTable optionTable) {
         OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
         HashMap<String, String> map = new HashMap<String, String>();
@@ -89,7 +89,7 @@ public class VtkViewController {
 
 
         /* To Viewer */
-        dialog.renderItkImage(lungSegImage, noduleCandidateDetection.getVesselMap());
+        dialog.renderItkImage(lungSegImage, noduleCandidateDetection.getNoduleCandidates());
     }
 
 

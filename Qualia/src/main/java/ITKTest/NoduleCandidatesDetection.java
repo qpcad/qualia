@@ -137,7 +137,8 @@ public class NoduleCandidatesDetection implements Runnable {
                 double ee = Math.abs(pmoments.GetElement(2) / pmoments.GetElement(1));
 
                 // TODO this filter is not accurate
-                if (labelObject.GetEquivalentSphericalRadius() < 1.5 || volume < ((3 / 2) ^ 3) * Math.PI * 4 / 3) { // small objects
+                //if (labelObject.GetEquivalentSphericalRadius() < 1.5 || volume < ((3 / 2) ^ 3) * Math.PI * 4 / 3) { // small objects
+                if (labelObject.GetEquivalentSphericalRadius() < 3 || volume < ((4 / 2) ^ 3) * Math.PI * 4 / 3) {
                     continue;
                 }
                 if (labelObject.GetEquivalentSphericalRadius() > 15 || volume > ((30 / 2) ^ 3) * Math.PI * 4 / 3) { // huge object

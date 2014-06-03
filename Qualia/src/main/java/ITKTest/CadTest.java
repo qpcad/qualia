@@ -21,13 +21,13 @@ import java.io.FilenameFilter;
  * @date 2014. 4. 17.
  */
 public class CadTest {
-    /* Input file path */
-    private static String currentDir = System.getProperty("user.dir");
-    private static final String INPUT_DICOM_PATH = currentDir + "/src/test/resources/13614193285030022";
     //private static final String INPUT_DICOM_PATH = "/home/taznux/NCIA_DB/LIDC_old/13614193285030024/";
     private static final String OUTPUT_LUNG_IMAGE1 = "/Users/taznux/Desktop/lung1.mha";
     private static final String OUTPUT_LUNG_IMAGE2 = "/Users/taznux/Desktop/lung2.mha";
     private static final String OUTPUT_NODULE_IMAGE1 = "/Users/taznux/Desktop/nodule1.mha";
+    /* Input file path */
+    private static String currentDir = System.getProperty("user.dir");
+    private static final String INPUT_DICOM_PATH = currentDir + "/src/test/resources/13614193285030022";
 
     /**
      * <pre>
@@ -162,7 +162,7 @@ public class CadTest {
 
 
         System.out.println("Nodule Candidates Detection");
-		/* Nodule Candidates Detection */
+        /* Nodule Candidates Detection */
         NoduleCandidatesDetection noduleCandidateDetection = new NoduleCandidatesDetection();
         noduleCandidateDetection.setLungImage(lungImage);
         noduleCandidateDetection.setLungMask(lungSegFilter.getLungMask());

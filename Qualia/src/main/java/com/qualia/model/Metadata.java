@@ -16,12 +16,6 @@ public class Metadata {
     public final static String KEY_CONTENT_DATE = "Content Date";
     public final static String KEY_INSTITUTE_NAME = "Institution Name";
     public final static String KEY_REFERRING_NAME = "Referring Physician's Name";
-
-
-
-    @DatabaseField(generatedId = true)
-    private int id;
-
     @DatabaseField(columnName = "uid")
     public String uId;
     @DatabaseField(columnName = "path")
@@ -48,12 +42,14 @@ public class Metadata {
     public String instituteName;
     @DatabaseField(columnName = "referName")
     public String referringName;
+    @DatabaseField(generatedId = true)
+    private int id;
 
-    Metadata(){
+    Metadata() {
 
     }
 
-    public Metadata(String path, String uId){
+    public Metadata(String path, String uId) {
         this.path = path;
         this.uId = uId;
     }

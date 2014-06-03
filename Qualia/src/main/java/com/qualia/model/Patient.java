@@ -1,35 +1,34 @@
 package com.qualia.model;
 
-import java.util.*;
+import java.util.Vector;
 
 public class Patient {
 
     private Vector<Metadata> mMetaDataList;
 
-    public void setMetaDataList(Vector<Metadata> metaDataList){
-        mMetaDataList = metaDataList;
-    }
-    public Vector<Metadata> getMetaDataList(){
+    public Vector<Metadata> getMetaDataList() {
         return mMetaDataList;
     }
 
-    public String getPatientId(){
+    public void setMetaDataList(Vector<Metadata> metaDataList) {
+        mMetaDataList = metaDataList;
+    }
+
+    public String getPatientId() {
         return mMetaDataList.get(0).patientId;
     }
 
-    public String getPatientName(){
+    public String getPatientName() {
         return mMetaDataList.get(0).patientName;
     }
 
-    public String getPatientAge(){
+    public String getPatientAge() {
         return mMetaDataList.get(0).patientBirthday;
     }
 
-    public String getPatientSex(){
+    public String getPatientSex() {
         return mMetaDataList.get(0).patientSex;
     }
-
-
 
 
 }

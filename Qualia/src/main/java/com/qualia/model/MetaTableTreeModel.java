@@ -3,10 +3,11 @@ package com.qualia.model;
 import com.j256.ormlite.dao.Dao;
 import org.jdesktop.swingx.treetable.AbstractTreeTableModel;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Vector;
 
-public class MetaTableTreeModel extends AbstractTreeTableModel{
-    private  final static String[] COLUMN_NAMES = {
+public class MetaTableTreeModel extends AbstractTreeTableModel {
+    private final static String[] COLUMN_NAMES = {
             Metadata.KEY_PATIENT_NAME,
             Metadata.KEY_PATIENT_ID,
             Metadata.KEY_PATIENT_BIRTHDAY,
@@ -22,18 +23,18 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
 
     Vector<Patient> mPatientList = new Vector<Patient>();
 
-    public MetaTableTreeModel(){
+    public MetaTableTreeModel() {
         super(new Object());
     }
 
-    public void updatePatientList(Dao<Metadata, Integer> metaDao){
+    public void updatePatientList(Dao<Metadata, Integer> metaDao) {
         HashMap<String, Vector<Metadata>> patientMap =
                 new HashMap<String, Vector<Metadata>>();
 
         for (Metadata metadata : metaDao) {
             Vector<Metadata> metaList = patientMap.get(metadata.patientId);
 
-            if(metaList==null){
+            if (metaList == null) {
                 metaList = new Vector<Metadata>();
                 patientMap.put(metadata.patientId, metaList);
             }
@@ -45,7 +46,7 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
 
         patientMap.keySet();
 
-        for(String key : patientMap.keySet()){
+        for (String key : patientMap.keySet()) {
             Patient patient = new Patient();
             patient.setMetaDataList(patientMap.get(key));
             patientVector.add(patient);
@@ -77,7 +78,7 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
 
     @Override
     public int getChildCount(Object parent) {
-        if(parent instanceof Patient){
+        if (parent instanceof Patient) {
             Patient patient = (Patient) parent;
             return patient.getMetaDataList().size();
         }
@@ -87,7 +88,7 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
 
     @Override
     public Object getChild(Object parent, int index) {
-        if(parent instanceof Patient){
+        if (parent instanceof Patient) {
             Patient patient = (Patient) parent;
             return patient.getMetaDataList().get(index);
         }
@@ -106,7 +107,7 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
     public Object getValueAt(Object node, int column) {
         if (node instanceof Patient) {
             Patient patient = (Patient) node;
-            switch (column){
+            switch (column) {
                 case 0:
                     return patient.getPatientName();
                 case 1:
@@ -116,9 +117,9 @@ public class MetaTableTreeModel extends AbstractTreeTableModel{
                 case 3:
                     return patient.getPatientSex();
             }
-        } else if (node instanceof Metadata){
+        } else if (node instanceof Metadata) {
             Metadata metadata = (Metadata) node;
-            switch (column){
+            switch (column) {
                 case 0:
                 case 1:
                 case 2:

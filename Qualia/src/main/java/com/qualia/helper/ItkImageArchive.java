@@ -13,7 +13,7 @@ public class ItkImageArchive {
     }
 
     public static ItkImageArchive getInstance() {
-        if(mInstance==null){
+        if (mInstance == null) {
             mInstance = new ItkImageArchive();
         }
 
