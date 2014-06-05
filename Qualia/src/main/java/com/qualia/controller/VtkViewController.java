@@ -1,8 +1,8 @@
 package com.qualia.controller;
 
-import ITKTest.ImageProcessingUtils;
 import ITKTest.LungSegmentation;
 import ITKTest.NoduleCandidatesDetection;
+import ITKTest.NoduleClassification;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
@@ -22,6 +22,8 @@ public class VtkViewController {
     itkImageSS3 lungImage;
     itkImageUC3 lungMaskImage;
     itkImageSS3 lungSegImage;
+    private itkImageUC3 noduleCandidatesMask;
+    private itkImageUC3 veselMask;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
@@ -47,15 +49,17 @@ public class VtkViewController {
         lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
 
 
-        System.out.println("Image interpolation");
-        ImageProcessingUtils.tic();
-        lungImage = ImageProcessingUtils.imageInterpolation(lungImage);
-        ImageProcessingUtils.toc();
-
-        System.out.println("Image enhancement");
-        ImageProcessingUtils.tic();
-        lungImage = ImageProcessingUtils.imageEnhancement(lungImage);
-        ImageProcessingUtils.toc();
+//        System.out.println("Image interpolation");
+//        ImageProcessingUtils.tic();
+//        itkImageSS3 isoLungImage = ImageProcessingUtils.imageInterpolation(lungImage);
+//        ImageProcessingUtils.toc();
+//
+//        System.out.println("Image enhancement");
+//        ImageProcessingUtils.tic();
+//        itkImageSS3 enhancedLungImage = ImageProcessingUtils.imageEnhancement(isoLungImage);
+//        ImageProcessingUtils.toc();
+//
+//        lungImage = enhancedLungImage;
 
         System.out.println("Lung Segmentation");
         /* Lung Segmentation */
@@ -100,6 +104,8 @@ public class VtkViewController {
         noduleCandidateDetection.setLungMask(lungMaskImage);
         noduleCandidateDetection.run();
 
+        noduleCandidatesMask = noduleCandidateDetection.getNoduleCandidatesMask();
+        veselMask = noduleCandidateDetection.getVesselMask();
 
         /* To Viewer */
         dialog.renderItkImage(noduleCandidateDetection.getNoduleCandidatesLabel());
@@ -107,4 +113,18 @@ public class VtkViewController {
     }
 
 
+    public void onModule3BtnClicked(JXTable optionTable) {
+        if (noduleCandidatesMask == null)
+            onModule2BtnClicked(optionTable);
+
+        System.out.println("Nodule Classification");
+        NoduleClassification noduleClassification = new NoduleClassification();
+        noduleClassification.setLungSegImage(lungSegImage);
+        noduleClassification.setNoduleCandidatesMask_(noduleCandidatesMask);
+        noduleClassification.setVesselMask_(veselMask);
+
+        noduleClassification.run();
+
+        dialog.renderItkImage(noduleClassification.getNodulesLabel());
+    }
 }

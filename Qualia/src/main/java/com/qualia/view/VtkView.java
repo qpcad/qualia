@@ -83,6 +83,7 @@ public class VtkView extends JDialog {
         btnModule3.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
+                mController.onModule3BtnClicked(optionTable);
             }
         });
         toolBar.add(btnModule3);

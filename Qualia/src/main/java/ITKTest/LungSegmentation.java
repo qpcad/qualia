@@ -217,7 +217,7 @@ public class LungSegmentation implements Runnable {
      * @method getLungLabelMap
      */
     private itkLabelMap3 getLungLabelMap() {
-        itkImageUC3 lungThresholdImage = ImageProcessingUtils.thresholdImage(lungImage_, (short) -500);
+        itkImageUC3 lungThresholdImage = ImageProcessingUtils.thresholdImage(lungImage_, (short) -800);
         itkImageUC3 initialLungMask = removeRim(lungThresholdImage);
 
         itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
