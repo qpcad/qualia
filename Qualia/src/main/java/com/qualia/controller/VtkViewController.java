@@ -1,5 +1,6 @@
 package com.qualia.controller;
 
+import ITKTest.ImageProcessingUtils;
 import ITKTest.LungSegmentation;
 import ITKTest.NoduleCandidatesDetection;
 import ITKTest.NoduleClassification;
@@ -49,17 +50,17 @@ public class VtkViewController {
         lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
 
 
-//        System.out.println("Image interpolation");
-//        ImageProcessingUtils.tic();
-//        itkImageSS3 isoLungImage = ImageProcessingUtils.imageInterpolation(lungImage);
-//        ImageProcessingUtils.toc();
-//
-//        System.out.println("Image enhancement");
-//        ImageProcessingUtils.tic();
-//        itkImageSS3 enhancedLungImage = ImageProcessingUtils.imageEnhancement(isoLungImage);
-//        ImageProcessingUtils.toc();
-//
-//        lungImage = enhancedLungImage;
+        System.out.println("Image interpolation");
+        ImageProcessingUtils.tic();
+        itkImageSS3 isoLungImage = ImageProcessingUtils.imageInterpolation(lungImage, 0.8);
+        ImageProcessingUtils.toc();
+
+        System.out.println("Image enhancement");
+        ImageProcessingUtils.tic();
+        itkImageSS3 enhancedLungImage = ImageProcessingUtils.imageEnhancement(isoLungImage);
+        ImageProcessingUtils.toc();
+
+        lungImage = enhancedLungImage;
 
         System.out.println("Lung Segmentation");
         /* Lung Segmentation */

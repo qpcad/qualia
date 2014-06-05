@@ -116,12 +116,12 @@ public class NoduleCandidatesDetection implements Runnable {
      * @method multiThresholdDetection
      */
     private void multiThresholdDetection(itkImageSS3 lungSegImage) {
-        long new_label = 0;
-        long new_vlabel = 0;
+        long new_label = 1;
+        long new_vlabel = 1;
 
         int step = 16;
-        int maxThreshold = 0;
-        int minThreshold = -600;
+        int maxThreshold = -200;
+        int minThreshold = -800;
         int gap = (maxThreshold - minThreshold) / step;
 
         noduleCandidates_ = new itkLabelMap3();
@@ -136,10 +136,11 @@ public class NoduleCandidatesDetection implements Runnable {
             itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
 
             short threshold = (short) (minThreshold + gap * i);
+            int seRadius = Math.abs(threshold / 100 / 2);
 
             itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(lungSegImage, threshold);
 
-            System.out.println("T: " + threshold);
+            System.out.println("T: " + threshold + "seR: " + seRadius);
 
             sliceBySliceImageFilter.SetInput(noduleThresholdImage);
             sliceBySliceImageFilter.SetFilter(openingFilter);
@@ -150,8 +151,8 @@ public class NoduleCandidatesDetection implements Runnable {
             labelMapFilter.ComputePerimeterOn();
 
             itkSize2 radius = new itkSize2();
-            radius.SetElement(0, 1);
-            radius.SetElement(1, 1);
+            radius.SetElement(0, seRadius);
+            radius.SetElement(1, seRadius);
             itkFlatStructuringElement2 ball = itkFlatStructuringElement2.Ball(radius);
 
             openingFilter.SetKernel(ball);

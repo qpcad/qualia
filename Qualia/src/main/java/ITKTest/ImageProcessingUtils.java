@@ -54,9 +54,7 @@ final public class ImageProcessingUtils {
         System.out.println("Elapsed time " + (System.currentTimeMillis() - startTime_) / 1000.0);
     }
 
-    static public itkImageSS3 imageInterpolation(itkImageSS3 input) {
-        double targetSpacing = 1;
-
+    static public itkImageSS3 imageInterpolation(itkImageSS3 input, double targetSpacing) {
         itkResampleImageFilterISS3ISS3 resampleImage = new itkResampleImageFilterISS3ISS3();
         itkVectorD3 inputSpacing = input.GetSpacing();
         itkVectorD3 outputSpacing = new itkVectorD3(targetSpacing);
@@ -89,15 +87,16 @@ final public class ImageProcessingUtils {
         itkCastImageFilterISS3IF3 castImageFilterISS3IF3 = new itkCastImageFilterISS3IF3();
         itkGradientAnisotropicDiffusionImageFilterIF3IF3 gradientAnisotropicDiffusionImageFilter = new itkGradientAnisotropicDiffusionImageFilterIF3IF3();
         itkCastImageFilterIF3ISS3 castImageFilterIF3ISS3 = new itkCastImageFilterIF3ISS3();
-
+        double minSpacing = input.GetSpacing().GetElement(0) > input.GetSpacing().GetElement(2) ? input.GetSpacing().GetElement(0) : input.GetSpacing().GetElement(2);
+        double timeStep = minSpacing / Math.pow(2, itkImageSS3.GetImageDimension() + 1);
 
         castImageFilterISS3IF3.SetInput(input);
         gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
         castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
 
         gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
-        gradientAnisotropicDiffusionImageFilter.SetTimeStep(0.05);
-        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(5.0);
+        gradientAnisotropicDiffusionImageFilter.SetTimeStep(timeStep);
+        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(15.0);
 
         castImageFilterIF3ISS3.Update();
         return castImageFilterIF3ISS3.GetOutput();

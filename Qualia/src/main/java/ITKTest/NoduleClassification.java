@@ -32,10 +32,11 @@ public class NoduleClassification implements Runnable {
 
     @Override
     public void run() {
-        long new_label = 0;
+        long new_label = 1;
         itkBinaryImageToStatisticsLabelMapFilterIUC3ISS3LM3 labelMapFilter = new itkBinaryImageToStatisticsLabelMapFilterIUC3ISS3LM3();
 
         nodules_ = new itkLabelMap3();
+        nodules_.CopyInformation(lungSegImage_);
 
         ImageProcessingUtils.tic();
 
@@ -56,11 +57,12 @@ public class NoduleClassification implements Runnable {
 
             double volume = labelObject.GetPhysicalSize();
             double pixels = labelObject.Size();
-            itkVectorD3 principalMoments = labelObject.GetPrincipalMoments();
+            itkVectorD3 principalMoments = labelObject.GetWeightedPrincipalMoments();
             double roundness = labelObject.GetRoundness();
             //double elongation = labelObject.GetElongation();
             double elongation = Math.abs(principalMoments.GetElement(2) / principalMoments.GetElement(1));
             double feretDiameter = labelObject.GetFeretDiameter();
+            double mean = labelObject.GetMean();
 
             if (feretDiameter < 3 || volume < Math.pow(1.5, 3) * Math.PI * 4 / 3) { // small object
                 continue;
@@ -68,28 +70,32 @@ public class NoduleClassification implements Runnable {
             if (feretDiameter > 30 || volume > Math.pow(15, 3) * Math.PI * 4 / 3) { // huge object
                 continue;
             }
-            if (roundness < 0.8 || roundness > 1.2 || elongation > 4) {
+            if (roundness < 0.8 || roundness > 1.2 || elongation > 4 || mean > -100) {
                 continue;
             }
 
             System.out.println("Nodule " + new_label);
+            System.out.println(labelObject);
 
             labelObject.SetLabel(new_label++);
             nodules_.AddLabelObject(labelObject);
         }
 
+        System.out.println("Objects " + labels + " " + nodules_.GetNumberOfLabelObjects());
+        nodules_.Update();
+
         ImageProcessingUtils.toc();
 
-        {
-            itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
-            itkBinaryImageToLabelMapFilterIUC3LM3 binaryImageToLabelMapFilter = new itkBinaryImageToLabelMapFilterIUC3LM3();
+        itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
+        itkBinaryImageToLabelMapFilterIUC3LM3 binaryImageToLabelMapFilter = new itkBinaryImageToLabelMapFilterIUC3LM3();
 
-            labelMapToBinaryImageFilter.SetInput(nodules_);
-            binaryImageToLabelMapFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
-            binaryImageToLabelMapFilter.Update();
-            nodulesMask_ = labelMapToBinaryImageFilter.GetOutput();
-            nodules_ = binaryImageToLabelMapFilter.GetOutput();
-        }
+        labelMapToBinaryImageFilter.SetInput(nodules_);
+        binaryImageToLabelMapFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
+        binaryImageToLabelMapFilter.Update();
+        nodulesMask_ = labelMapToBinaryImageFilter.GetOutput();
+        nodules_ = binaryImageToLabelMapFilter.GetOutput();
+
+        ImageProcessingUtils.toc();
 
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
