@@ -1,14 +1,18 @@
 package ITKTest;
 
 import org.itk.itkanisotropicsmoothing.itkGradientAnisotropicDiffusionImageFilterIF3IF3;
+import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkcommon.itkImageUC3;
+import org.itk.itkcommon.itkSize2;
 import org.itk.itkcommon.itkVectorD3;
 import org.itk.itkimagefilterbase.itkCastImageFilterIF3ISS3;
 import org.itk.itkimagefilterbase.itkCastImageFilterISS3IF3;
+import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
 import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
+import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
 /**
  * <pre>
@@ -133,30 +137,31 @@ public class NoduleCandidatesDetection implements Runnable {
         vesselMap_.CopyInformation(lungSegImage);
         noduleCandidates_.CopyInformation(lungSegImage);
 
-        castImageFilterISS3IF3.SetInput(lungSegImage);
-        gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
-        castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
-
-        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
-        gradientAnisotropicDiffusionImageFilter.SetTimeStep(0.03);
-        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(3.0);
-
-        castImageFilterIF3ISS3.Update();
-
-
         for (int i = 0; i < step; i++) {
+            itkSliceBySliceImageFilterIUC3IUC3 slicebysliceFitler = new itkSliceBySliceImageFilterIUC3IUC3();
+            itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2 openingFilter = new itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2();
             itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
 
             short threshold = (short) (minThreshold + gap * (step - i));
 
-            itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(castImageFilterIF3ISS3.GetOutput(), threshold);
+            itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(lungSegImage, threshold);
 
             System.out.println("T: " + threshold);
 
-            labelMapFilter.SetInput(noduleThresholdImage);
+            slicebysliceFitler.SetInput(noduleThresholdImage);
+            slicebysliceFitler.SetFilter(openingFilter);
+            labelMapFilter.SetInput(slicebysliceFitler.GetOutput());
 
+            labelMapFilter.FullyConnectedOn();
             labelMapFilter.ComputeFeretDiameterOn();
             labelMapFilter.ComputePerimeterOn();
+
+            itkSize2 radius = new itkSize2();
+            radius.SetElement(0, 1);
+            radius.SetElement(1, 1);
+            itkFlatStructuringElement2 ball = itkFlatStructuringElement2.Ball(radius);
+
+            openingFilter.SetKernel(ball);
 
             labelMapFilter.Update();
 

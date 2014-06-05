@@ -1,17 +1,21 @@
 package ITKTest;
 
-import org.itk.itkcommon.itkImageRGBUC3;
-import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkcommon.itkImageUC3;
+import org.itk.itkanisotropicsmoothing.itkGradientAnisotropicDiffusionImageFilterIF3IF3;
+import org.itk.itkcommon.*;
 import org.itk.itkconnectedcomponents.itkConnectedComponentImageFilterIUC3ISS3;
+import org.itk.itkimagefilterbase.itkCastImageFilterIF3ISS3;
+import org.itk.itkimagefilterbase.itkCastImageFilterISS3IF3;
+import org.itk.itkimagefunction.itkLinearInterpolateImageFunctionISS3D;
 import org.itk.itkimagefusion.itkLabelMapToRGBImageFilterLM3IRGBUC3;
 import org.itk.itkimagefusion.itkLabelOverlayImageFilterIUC3ISS3IRGBUC3;
+import org.itk.itkimagegrid.itkResampleImageFilterISS3ISS3;
 import org.itk.itkimageintensity.itkRescaleIntensityImageFilterISS3IUC3;
 import org.itk.itkioimagebase.itkImageFileWriterIRGBUC3;
 import org.itk.itkioimagebase.itkImageFileWriterISS3;
 import org.itk.itklabelmap.itkLabelMap3;
 import org.itk.itklabelmap.itkLabelMapToBinaryImageFilterLM3IUC3;
 import org.itk.itkthresholding.itkBinaryThresholdImageFilterISS3IUC3;
+import org.itk.itktransform.itkIdentityTransformD3;
 
 /**
  * <pre>
@@ -48,6 +52,55 @@ final public class ImageProcessingUtils {
      */
     static public void toc() {
         System.out.println("Elapsed time " + (System.currentTimeMillis() - startTime_) / 1000.0);
+    }
+
+    static public itkImageSS3 imageInterpolation(itkImageSS3 input) {
+        double targetSpacing = 1;
+
+        itkResampleImageFilterISS3ISS3 resampleImage = new itkResampleImageFilterISS3ISS3();
+        itkVectorD3 inputSpacing = input.GetSpacing();
+        itkVectorD3 outputSpacing = new itkVectorD3(targetSpacing);
+        itkIdentityTransformD3 identityTransform = new itkIdentityTransformD3();
+        itkLinearInterpolateImageFunctionISS3D linearInterpolate = new itkLinearInterpolateImageFunctionISS3D();
+
+        identityTransform.SetIdentity();
+
+        itkSize3 inputSize = input.GetLargestPossibleRegion().GetSize();
+        itkSize3 outputSize = new itkSize3();
+
+        for (int i = 0; i < 3; i++)
+            outputSize.SetElement(i, (long) (inputSize.GetElement(i) * inputSpacing.GetElement(i) / outputSpacing.GetElement(i) + 0.5));
+
+        resampleImage.SetInput(input);
+        resampleImage.SetTransform(identityTransform);
+        resampleImage.SetInterpolator(linearInterpolate);
+        resampleImage.SetOutputSpacing(outputSpacing);
+        resampleImage.SetOutputOrigin(input.GetOrigin());
+        resampleImage.SetOutputDirection(input.GetDirection());
+        resampleImage.SetSize(outputSize);
+
+        resampleImage.Update();
+
+        return resampleImage.GetOutput();
+    }
+
+
+    static public itkImageSS3 imageEnhancement(itkImageSS3 input) {
+        itkCastImageFilterISS3IF3 castImageFilterISS3IF3 = new itkCastImageFilterISS3IF3();
+        itkGradientAnisotropicDiffusionImageFilterIF3IF3 gradientAnisotropicDiffusionImageFilter = new itkGradientAnisotropicDiffusionImageFilterIF3IF3();
+        itkCastImageFilterIF3ISS3 castImageFilterIF3ISS3 = new itkCastImageFilterIF3ISS3();
+
+
+        castImageFilterISS3IF3.SetInput(input);
+        gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
+        castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
+
+        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
+        gradientAnisotropicDiffusionImageFilter.SetTimeStep(0.05);
+        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(5.0);
+
+        castImageFilterIF3ISS3.Update();
+        return castImageFilterIF3ISS3.GetOutput();
     }
 
     /**

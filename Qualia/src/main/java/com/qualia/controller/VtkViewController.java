@@ -1,5 +1,6 @@
 package com.qualia.controller;
 
+import ITKTest.ImageProcessingUtils;
 import ITKTest.LungSegmentation;
 import ITKTest.NoduleCandidatesDetection;
 import com.qualia.helper.ItkImageArchive;
@@ -43,9 +44,21 @@ public class VtkViewController {
 
         model.fireTableDataChanged();
 
+        lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
+
+
+        System.out.println("Image interpolation");
+        ImageProcessingUtils.tic();
+        lungImage = ImageProcessingUtils.imageInterpolation(lungImage);
+        ImageProcessingUtils.toc();
+
+        System.out.println("Image enhancement");
+        ImageProcessingUtils.tic();
+        lungImage = ImageProcessingUtils.imageEnhancement(lungImage);
+        ImageProcessingUtils.toc();
+
         System.out.println("Lung Segmentation");
         /* Lung Segmentation */
-        lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
         LungSegmentation lungSegmentation = new LungSegmentation();
         lungSegmentation.setLungImage(lungImage);
         lungSegmentation.run();
