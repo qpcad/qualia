@@ -1,10 +1,13 @@
 package ITKTest;
 
+import org.itk.itkanisotropicsmoothing.itkGradientAnisotropicDiffusionImageFilterIF3IF3;
+import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalClosingImageFilterIUC2IUC2SE2;
 import org.itk.itkcommon.*;
 import org.itk.itkimagecompose.itkJoinSeriesImageFilterIUC2IUC3;
+import org.itk.itkimagefilterbase.itkCastImageFilterIF3ISS3;
+import org.itk.itkimagefilterbase.itkCastImageFilterISS3IF3;
 import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
 import org.itk.itklabelmap.*;
-import org.itk.itkmathematicalmorphology.itkClosingByReconstructionImageFilterIUC2IUC2SE2;
 import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
 /**
@@ -178,22 +181,24 @@ public class LungSegmentation implements Runnable {
     private itkImageUC3 refineLungMask(itkLabelMap3 labelMap) {
         itkLabelMapToBinaryImageFilterLM3IUC3 labelToBinary = new itkLabelMapToBinaryImageFilterLM3IUC3();
         itkBinaryFillholeImageFilterIUC3 holeFillFilter = new itkBinaryFillholeImageFilterIUC3();
-        itkSliceBySliceImageFilterIUC3IUC3 slicebysliceFitler = new itkSliceBySliceImageFilterIUC3IUC3();
+        itkSliceBySliceImageFilterIUC3IUC3 sliceBySliceImageFilter = new itkSliceBySliceImageFilterIUC3IUC3();
 
-        itkClosingByReconstructionImageFilterIUC2IUC2SE2 closingFilter = new itkClosingByReconstructionImageFilterIUC2IUC2SE2();
+        itkBinaryMorphologicalClosingImageFilterIUC2IUC2SE2 closingFilter = new itkBinaryMorphologicalClosingImageFilterIUC2IUC2SE2();
 
         labelToBinary.SetInput(labelMap);
-        slicebysliceFitler.SetInput(labelToBinary.GetOutput());
-        holeFillFilter.SetInput(slicebysliceFitler.GetOutput());
+        sliceBySliceImageFilter.SetInput(labelToBinary.GetOutput());
+        holeFillFilter.SetInput(sliceBySliceImageFilter.GetOutput());
 
         itkSize2 radius = new itkSize2();
-        radius.SetElement(0, 5);
-        radius.SetElement(1, 5);
+        int r = (int) (10 / labelMap.GetSpacing().GetElement(0));
+        radius.SetElement(0, r);
+        radius.SetElement(1, r);
         itkFlatStructuringElement2 ball = itkFlatStructuringElement2.Ball(radius);
+        System.out.println("radius: " + r);
 
         closingFilter.SetKernel(ball);
 
-        slicebysliceFitler.SetFilter(closingFilter);
+        sliceBySliceImageFilter.SetFilter(closingFilter);
         holeFillFilter.SetForegroundValue((short) 255);
 
         holeFillFilter.Update();
@@ -211,7 +216,24 @@ public class LungSegmentation implements Runnable {
      * @method getLungLabelMap
      */
     private itkLabelMap3 getLungLabelMap() {
-        itkImageUC3 lungThresholdImage = ImageProcessingUtils.thresholdImage(lungImage_, (short) -500);
+        itkCastImageFilterISS3IF3 castImageFilterISS3IF3 = new itkCastImageFilterISS3IF3();
+        itkGradientAnisotropicDiffusionImageFilterIF3IF3 gradientAnisotropicDiffusionImageFilter = new itkGradientAnisotropicDiffusionImageFilterIF3IF3();
+        itkCastImageFilterIF3ISS3 castImageFilterIF3ISS3 = new itkCastImageFilterIF3ISS3();
+
+
+        castImageFilterISS3IF3.SetInput(lungImage_);
+        gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
+        castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
+
+        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
+        gradientAnisotropicDiffusionImageFilter.SetTimeStep(0.03);
+        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(3.0);
+
+        castImageFilterIF3ISS3.Update();
+
+        ImageProcessingUtils.toc();
+
+        itkImageUC3 lungThresholdImage = ImageProcessingUtils.thresholdImage(castImageFilterIF3ISS3.GetOutput(), (short) -500);
         itkImageUC3 initialLungMask = removeRim(lungThresholdImage);
 
         itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();

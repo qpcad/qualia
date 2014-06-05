@@ -1,15 +1,14 @@
 package ITKTest;
 
-import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2;
+import org.itk.itkanisotropicsmoothing.itkGradientAnisotropicDiffusionImageFilterIF3IF3;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkcommon.itkImageUC3;
-import org.itk.itkcommon.itkSize2;
 import org.itk.itkcommon.itkVectorD3;
-import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
+import org.itk.itkimagefilterbase.itkCastImageFilterIF3ISS3;
+import org.itk.itkimagefilterbase.itkCastImageFilterISS3IF3;
 import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
-import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
 /**
  * <pre>
@@ -89,7 +88,7 @@ public class NoduleCandidatesDetection implements Runnable {
 
         maskImageFilter.SetConstant1((short) 1500);
         maskImageFilter.SetMaskImage(noduleCandidatesMask_);
-        maskImageFilter1.SetConstant1((short) 100);
+        maskImageFilter1.SetConstant1((short) 500);
         maskImageFilter1.SetMaskImage(vesselMask_);
 
         addImageFilter.SetInput1(lungSegImage);
@@ -116,97 +115,114 @@ public class NoduleCandidatesDetection implements Runnable {
      * @method multiThresholdDetection
      */
     private void multiThresholdDetection(itkImageSS3 lungSegImage) {
+        itkCastImageFilterISS3IF3 castImageFilterISS3IF3 = new itkCastImageFilterISS3IF3();
+        itkGradientAnisotropicDiffusionImageFilterIF3IF3 gradientAnisotropicDiffusionImageFilter = new itkGradientAnisotropicDiffusionImageFilterIF3IF3();
+        itkCastImageFilterIF3ISS3 castImageFilterIF3ISS3 = new itkCastImageFilterIF3ISS3();
+
+        long new_label = 0;
+        long new_vlabel = 0;
+
+        int step = 16;
+        int maxThreshold = 0;
+        int minThreshold = -800;
+        int gap = (maxThreshold - minThreshold) / step;
+
         noduleCandidates_ = new itkLabelMap3();
         vesselMap_ = new itkLabelMap3();
 
         vesselMap_.CopyInformation(lungSegImage);
         noduleCandidates_.CopyInformation(lungSegImage);
 
-        short thresholdList[] = {-800, -700, -600, -600, -600, -500, -500, -400, -400, -300, -300, -300, -200, -200};
-        int openRadiusList[] = {1, 1, 1, 2, 3, 1, 2, 1, 2, 1, 2, 3, 1, 2};
-        long new_label = 0;
-        long new_vlabel = 0;
+        castImageFilterISS3IF3.SetInput(lungSegImage);
+        gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
+        castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
+
+        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
+        gradientAnisotropicDiffusionImageFilter.SetTimeStep(0.03);
+        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(3.0);
+
+        castImageFilterIF3ISS3.Update();
 
 
-        for (int i = thresholdList.length - 1; i >= 0; i--) {
-            itkSliceBySliceImageFilterIUC3IUC3 slicebysliceFitler = new itkSliceBySliceImageFilterIUC3IUC3();
-            itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2 openingFilter = new itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2();
+        for (int i = 0; i < step; i++) {
             itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
 
-            itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(lungSegImage, thresholdList[i]);
+            short threshold = (short) (minThreshold + gap * (step - i));
 
-            System.out.println("(" + thresholdList[i] + ", " + openRadiusList[i] + ")");
+            itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(castImageFilterIF3ISS3.GetOutput(), threshold);
 
-            slicebysliceFitler.SetInput(noduleThresholdImage);
-            slicebysliceFitler.SetFilter(openingFilter);
-            labelMapFilter.SetInput(slicebysliceFitler.GetOutput());
+            System.out.println("T: " + threshold);
 
-            itkSize2 radius = new itkSize2();
-            radius.SetElement(0, openRadiusList[i]);
-            radius.SetElement(1, openRadiusList[i]);
-            itkFlatStructuringElement2 ball = itkFlatStructuringElement2.Ball(radius);
+            labelMapFilter.SetInput(noduleThresholdImage);
 
-            openingFilter.SetKernel(ball);
+            labelMapFilter.ComputeFeretDiameterOn();
+            labelMapFilter.ComputePerimeterOn();
 
             labelMapFilter.Update();
+
+            ImageProcessingUtils.toc();
+
             long labels = labelMapFilter.GetOutput().GetNumberOfLabelObjects();
             for (long l = 1; l <= labels; l++) {
                 itkStatisticsLabelObjectUL3 labelObject = labelMapFilter.GetOutput().GetLabelObject(l);
 
                 double volume = labelObject.GetPhysicalSize();
                 double pixels = labelObject.Size();
-                itkVectorD3 pmoments = labelObject.GetPrincipalMoments();
-                double e = labelObject.GetElongation();
-                double r = labelObject.GetRoundness();
-                double ee = Math.abs(pmoments.GetElement(2) / pmoments.GetElement(1));
+                itkVectorD3 principalMoments = labelObject.GetPrincipalMoments();
+                double roundness = labelObject.GetRoundness();
+                //double elongation = labelObject.GetElongation();
+                double elongation = Math.abs(principalMoments.GetElement(2) / principalMoments.GetElement(1));
+                double feretDiameter = labelObject.GetFeretDiameter();
 
                 // TODO this filter is not accurate
-                //if (labelObject.GetEquivalentSphericalRadius() < 1.5 || volume < ((3 / 2) ^ 3) * Math.PI * 4 / 3) { // small objects
-                if (labelObject.GetEquivalentSphericalRadius() < 2 || volume < ((4 / 2) ^ 3) * Math.PI * 4 / 3) {
+                //System.out.println(feretDiameter +" "+ roundness);
+                //System.out.println(labelObject);
+                if (feretDiameter < 3 || volume < Math.pow(1.5, 3) * Math.PI * 4 / 3) { // small object
                     continue;
                 }
-                if (labelObject.GetEquivalentSphericalRadius() > 15 || volume > ((30 / 2) ^ 3) * Math.PI * 4 / 3) { // huge object
-                    if (thresholdList[i] > -100 || ee > 4) { // vessel
-                        labelObject.SetLabel(++new_vlabel);
+                if (feretDiameter > 30 || volume > Math.pow(15, 3) * Math.PI * 4 / 3) { // huge object
+                    if (roundness < 0.8 || roundness > 1.2 || elongation > 4) { // vessel
+                        System.out.println("R: " + roundness + ", E: " + elongation);
+                        labelObject.SetLabel(400);
+                        new_vlabel++;
                         vesselMap_.AddLabelObject(labelObject);
                     }
                     continue;
                 }
-                if (ee > 4) { // vessel - elongated object
-                    labelObject.SetLabel(++new_vlabel);
+                if (elongation > 4) { // vessel - elongated object
+                    labelObject.SetLabel(300);
+                    new_vlabel++;
                     vesselMap_.AddLabelObject(labelObject);
-                    System.out.println("Elongation:" + ee);
+                    System.out.println("Elongation:" + elongation);
 
+                    continue;
+                }
+                if (roundness < 0.8 || roundness > 1.2) {
                     continue;
                 }
                 // vessel overlap check
-                int overlap = 0;
-                for (int p = 0; p < pixels; p++) {
-                    if (vesselMap_.GetPixel(labelObject.GetIndex(p)) > 0)
-                        overlap++;
-                }
-                double ratio = overlap / pixels;
-                System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
-                if (ratio > 0.3) {
-
-                    labelObject.SetLabel(++new_vlabel);
-                    vesselMap_.AddLabelObject(labelObject);
-                    continue;
-                }
-                //-----------------------
-                if (labelObject.GetRoundness() > 1.1) {
-                    continue;
+                if (new_vlabel > 0) {
+                    int overlap = 0;
+                    for (int p = 0; p < pixels; p++) {
+                        if (vesselMap_.GetPixel(labelObject.GetIndex(p)) > 0)
+                            overlap++;
+                    }
+                    double ratio = overlap / pixels;
+                    System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
+                    if (ratio > 0.3) {
+                        labelObject.SetLabel(200);
+                        new_vlabel++;
+                        vesselMap_.AddLabelObject(labelObject);
+                        continue;
+                    }
                 }
 
-                labelObject.SetLabel(++new_label);
+                labelObject.SetLabel(100);
+                new_label++;
                 noduleCandidates_.AddLabelObject(labelObject);
-
-                //System.out.println(labelObject);
-                //System.out.println(e + " " + ee + " " + r);
             }
             System.out.println("Objects " + labels + " " + noduleCandidates_.GetNumberOfLabelObjects());
             System.out.println(new_label + ", " + new_vlabel);
-
             ImageProcessingUtils.toc();
         }
 
@@ -231,6 +247,7 @@ public class NoduleCandidatesDetection implements Runnable {
             vesselMask_ = labelMapToBinaryImageFilter.GetOutput();
             vesselMap_ = binaryImageToLabelMapFilter.GetOutput();
         }
+        ImageProcessingUtils.toc();
 
 
         //ImageProcessingUtils.writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");

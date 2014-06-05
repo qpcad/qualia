@@ -6,7 +6,7 @@ import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
 import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkimageintensity.itkRescaleIntensityImageFilterISS3IUC3;
+import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itklabelmap.itkLabelMap3;
 import org.itk.itklabelmap.itkLabelMapToBinaryImageFilterLM3IUC3;
 import org.itk.itkthresholding.itkThresholdImageFilterISS3;
@@ -136,21 +136,16 @@ public class VtkView extends JDialog {
         ImageProcessingUtils.tic();
 
         itkThresholdImageFilterISS3 threshold_below = new itkThresholdImageFilterISS3();
-        itkThresholdImageFilterISS3 threshold_above = new itkThresholdImageFilterISS3();
-        itkImageToVTKImageFilterIUC3 itkVtkFilter = new itkImageToVTKImageFilterIUC3();
-        itkRescaleIntensityImageFilterISS3IUC3 rescale = new itkRescaleIntensityImageFilterISS3IUC3();
+        itkAddImageFilterISS3ISS3ISS3 addImageFilter = new itkAddImageFilterISS3ISS3ISS3();
+        itkImageToVTKImageFilterISS3 itkVtkFilter = new itkImageToVTKImageFilterISS3();
 
         threshold_below.SetInput(input);
-        threshold_above.SetInput(threshold_below.GetOutput());
-        rescale.SetInput(threshold_above.GetOutput());
-        itkVtkFilter.SetInput(rescale.GetOutput());
+        addImageFilter.SetInput(threshold_below.GetOutput());
+        addImageFilter.SetConstant((short) 2000);
+        itkVtkFilter.SetInput(addImageFilter.GetOutput());
 
         threshold_below.ThresholdBelow((short) -2000);
         threshold_below.SetOutsideValue((short) -2000);
-
-        threshold_above.ThresholdAbove((short) 1000);
-        threshold_above.SetOutsideValue((short) 1000);
-
 
         itkVtkFilter.Update();
 
