@@ -30,6 +30,18 @@ public class NoduleClassification implements Runnable {
         return nodulesMask_;
     }
 
+    public void setVesselMask_(itkImageUC3 vesselMask_) {
+        this.vesselMask_ = vesselMask_;
+    }
+
+    public void setNoduleCandidatesMask_(itkImageUC3 noduleCandidatesMask_) {
+        this.noduleCandidatesMask_ = noduleCandidatesMask_;
+    }
+
+    public itkImageSS3 getNodulesLabel() {
+        return nodulesLabel_;
+    }
+
     @Override
     public void run() {
         long new_label = 1;
@@ -73,6 +85,18 @@ public class NoduleClassification implements Runnable {
             if (roundness < 0.8 || roundness > 1.2 || elongation > 4 || mean > -100) {
                 continue;
             }
+            // vessel overlap check
+            int overlap = 0;
+            for (int p = 0; p < pixels; p++) {
+                if (vesselMask_.GetPixel(labelObject.GetIndex(p)) > 0)
+                    overlap++;
+            }
+            double ratio = overlap / pixels;
+            if (ratio > 0.3) {
+                System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
+                continue;
+            }
+
 
             System.out.println("Nodule " + new_label);
             System.out.println(labelObject);
@@ -120,17 +144,5 @@ public class NoduleClassification implements Runnable {
         ImageProcessingUtils.toc();
 
         nodulesLabel_ = addImageFilter1.GetOutput();
-    }
-
-    public void setVesselMask_(itkImageUC3 vesselMask_) {
-        this.vesselMask_ = vesselMask_;
-    }
-
-    public void setNoduleCandidatesMask_(itkImageUC3 noduleCandidatesMask_) {
-        this.noduleCandidatesMask_ = noduleCandidatesMask_;
-    }
-
-    public itkImageSS3 getNodulesLabel() {
-        return nodulesLabel_;
     }
 }

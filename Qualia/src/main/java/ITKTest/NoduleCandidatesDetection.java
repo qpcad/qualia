@@ -119,9 +119,9 @@ public class NoduleCandidatesDetection implements Runnable {
         long new_label = 1;
         long new_vlabel = 1;
 
-        int step = 16;
-        int maxThreshold = -200;
-        int minThreshold = -800;
+        int step = 8;
+        int maxThreshold = -100;
+        int minThreshold = -750;
         int gap = (maxThreshold - minThreshold) / step;
 
         noduleCandidates_ = new itkLabelMap3();
@@ -135,12 +135,12 @@ public class NoduleCandidatesDetection implements Runnable {
             itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2 openingFilter = new itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2();
             itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
 
-            short threshold = (short) (minThreshold + gap * i);
-            int seRadius = Math.abs(threshold / 100 / 2);
+            short threshold = (short) (minThreshold + gap * (step - i - 1));
+            int seRadius = (int) Math.abs(threshold / 100 / 3.5);
 
             itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(lungSegImage, threshold);
 
-            System.out.println("T: " + threshold + "seR: " + seRadius);
+            System.out.println("T: " + threshold + " seR: " + seRadius);
 
             sliceBySliceImageFilter.SetInput(noduleThresholdImage);
             sliceBySliceImageFilter.SetFilter(openingFilter);
