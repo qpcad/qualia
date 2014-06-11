@@ -98,8 +98,8 @@ public class NoduleClassification implements Runnable {
             }
 
 
-            System.out.println("Nodule " + new_label);
-            System.out.println(labelObject);
+            //System.out.println("Nodule " + new_label);
+            //System.out.println(labelObject);
 
             labelObject.SetLabel(new_label++);
             nodules_.AddLabelObject(labelObject);
@@ -128,7 +128,7 @@ public class NoduleClassification implements Runnable {
 
         maskImageFilter.SetConstant1((short) 1500);
         maskImageFilter.SetMaskImage(nodulesMask_);
-        maskImageFilter1.SetConstant1((short) 500);
+        maskImageFilter1.SetConstant1((short) 200);
         maskImageFilter1.SetMaskImage(vesselMask_);
 
         addImageFilter.SetInput1(lungSegImage_);
@@ -136,8 +136,8 @@ public class NoduleClassification implements Runnable {
         addImageFilter1.SetInput1(addImageFilter.GetOutput());
         addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
 
-        maskImageFilter.SetOutsideValue((short) -500);
-        maskImageFilter1.SetOutsideValue((short) -500);
+        maskImageFilter.SetOutsideValue((short) -100);
+        maskImageFilter1.SetOutsideValue((short) -100);
 
         addImageFilter1.Update();
 
