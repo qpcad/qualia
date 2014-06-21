@@ -33,7 +33,8 @@ public class MainView extends JFrame {
         JToolBar toolBar = new JToolBar();
         getContentPane().add(toolBar, BorderLayout.NORTH);
 
-        mBtnImport = new JButton("Import");
+        mBtnImport = getImageButton("Import", "icon_Import.png", 32, 32);
+
         mBtnImport.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
@@ -42,25 +43,26 @@ public class MainView extends JFrame {
         });
         toolBar.add(mBtnImport);
 
-        JButton toolbarBtnExport = new JButton("Export");
+
+        JButton toolbarBtnExport = getImageButton("Export", "icon_Export.png", 32, 32);
         toolBar.add(toolbarBtnExport);
 
-        JButton toolbarBtnMetadata = new JButton("Meta-data");
+        JButton toolbarBtnMetadata = getImageButton("Metadata", "icon_MetaData.png", 32, 32);
         toolBar.add(toolbarBtnMetadata);
 
-        JButton toolbarBtnDelete = new JButton("Delete");
+        JButton toolbarBtnDelete = getImageButton("Delete", "icon_Delete.png", 32, 32);
         toolBar.add(toolbarBtnDelete);
 
-        JButton toolbarBtnSearch = new JButton("Search");
+        JButton toolbarBtnSearch = getImageButton("Search","icon_Search.png", 32, 32);
         toolBar.add(toolbarBtnSearch);
 
-        JButton btnQuery = new JButton("Query");
-        toolBar.add(btnQuery);
+//        JButton btnQuery = getImageButton("icon_.png", 32, 32);
+//        toolBar.add(btnQuery);
+//
+//        JButton btnSend = getImageButton("src/main/resources/icon_Import.png", 32, 32);
+//        toolBar.add(btnSend);
 
-        JButton btnSend = new JButton("Send");
-        toolBar.add(btnSend);
-
-        JButton toolbarBtnEtc = new JButton("Etc");
+        JButton toolbarBtnEtc = getImageButton("Etc", "icon_Etc.png", 32, 32);
         toolBar.add(toolbarBtnEtc);
 
         mTreeTable = new JXTreeTable(tableModel);
@@ -127,5 +129,11 @@ public class MainView extends JFrame {
         imageViewer.SetSliceOrientationToXY();
 
         mRightPanel.Render();
+    }
+
+    private static JButton getImageButton(String name, String resources, int width, int height){
+        ImageIcon iconImport = new ImageIcon("src/main/resources/" + resources);
+        Image imageImport = iconImport.getImage().getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
+        return  new JButton(new ImageIcon(imageImport));
     }
 }
