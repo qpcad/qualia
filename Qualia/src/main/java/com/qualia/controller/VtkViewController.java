@@ -1,30 +1,22 @@
 package com.qualia.controller;
 
-import ITKTest.ImageProcessingUtils;
-import ITKTest.LungSegmentation;
-import ITKTest.NoduleCandidatesDetection;
-import ITKTest.NoduleClassification;
-import com.qualia.helper.ItkImageArchive;
+import com.qualia.Module.LungSegmentation;
+import com.qualia.Module.NoduleClassification;
+import com.qualia.Module.NoduleDetection;
 import com.qualia.model.Metadata;
 import com.qualia.model.OptionTableModel;
 import com.qualia.view.VtkView;
-import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkcommon.itkImageUC3;
-import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.jdesktop.swingx.JXTable;
 
 import javax.swing.*;
-import java.util.HashMap;
 
 public class VtkViewController {
     Metadata mModel;
     VtkView dialog;
 
-    itkImageSS3 lungImage;
-    itkImageUC3 lungMaskImage;
-    itkImageSS3 lungSegImage;
-    private itkImageUC3 noduleCandidatesMask;
-    private itkImageUC3 veselMask;
+    private LungSegmentation mModuleLung;
+    private NoduleDetection mModuleDetection;
+    private NoduleClassification mModuleClassification;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
@@ -33,101 +25,54 @@ public class VtkViewController {
         dialog.setVisible(true);
 
         dialog.setModel(model);
+
+        mModuleLung = new LungSegmentation(model);
+        mModuleDetection = new NoduleDetection(mModuleLung);
+        mModuleClassification = new NoduleClassification(mModuleLung, mModuleDetection);
     }
 
     public void onModule1BtnClicked(JXTable optionTable) {
         OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
-        HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Specular", "1");
-        map.put("Diffuse", "0.6");
-        map.put("Ambiant", "0.5");
-
-        model.setOptionMap(map);
+        model.setOptionMap(mModuleLung.getOptionMap());
 
         model.fireTableDataChanged();
 
-        lungImage = ItkImageArchive.getInstance().getItkImage(mModel.uId);
+        mModuleLung.applyModule();
 
-
-        System.out.println("Image interpolation");
-        ImageProcessingUtils.getInstance().tic();
-        itkImageSS3 isoLungImage = ImageProcessingUtils.getInstance().getInstance().imageInterpolation(lungImage, 1.0);
-        ImageProcessingUtils.getInstance().toc();
-
-        lungImage = isoLungImage;
-
-//        System.out.println("Image enhancement");
-//        ImageProcessingUtils.getInstance().tic();
-//        itkImageSS3 enhancedLungImage = ImageProcessingUtils.getInstance().imageEnhancement(isoLungImage);
-//        ImageProcessingUtils.getInstance().toc();
-//
-//        lungImage = enhancedLungImage;
-
-        System.out.println("Lung Segmentation");
-        /* Lung Segmentation */
-        LungSegmentation lungSegmentation = new LungSegmentation();
-        lungSegmentation.setLungImage(lungImage);
-        lungSegmentation.run();
-
-        lungMaskImage = lungSegmentation.getLungMask();
-
-        /* Lung Masking */
-        itkMaskImageFilterISS3IUC3ISS3 maskFilter = new itkMaskImageFilterISS3IUC3ISS3();
-
-        maskFilter.SetInput1(lungImage);
-        maskFilter.SetInput2(lungMaskImage);
-        maskFilter.SetOutsideValue((short) -2000);
-        maskFilter.Update();
-
-        lungSegImage = maskFilter.GetOutput();
-
-        /* To Viewer */
-        dialog.renderItkImage(lungSegImage);
+        dialog.renderItkImage(mModuleLung.getOutput());
     }
 
     public void onModule2BtnClicked(JXTable optionTable) {
         OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
-        HashMap<String, String> map = new HashMap<String, String>();
-        map.put("Level", "2000");
-        map.put("Balance", "0.7");
-
-        model.setOptionMap(map);
+        model.setOptionMap(mModuleDetection.getOptionMap());
 
         model.fireTableDataChanged();
 
-        if (lungImage == null || lungMaskImage == null)
-            onModule1BtnClicked(optionTable);
+        if((mModuleLung.getOutput()==null)){
+            mModuleLung.applyModule();
+        }
 
-        System.out.println("Nodule Candidates Detection");
-        /* Nodule Candidates Detection */
-        NoduleCandidatesDetection noduleCandidateDetection = new NoduleCandidatesDetection();
-        noduleCandidateDetection.setLungImage(lungImage);
-        noduleCandidateDetection.setLungMask(lungMaskImage);
-        noduleCandidateDetection.run();
+        mModuleDetection.applyModule();
 
-        noduleCandidatesMask = noduleCandidateDetection.getNoduleCandidatesMask();
-        veselMask = noduleCandidateDetection.getVesselMask();
-
-        /* To Viewer */
-        dialog.renderItkImage(noduleCandidateDetection.getNoduleCandidatesLabel());
-        //dialog.renderItkImage(lungSegImage, noduleCandidateDetection.getNoduleCandidates());
+        dialog.renderItkImage(mModuleDetection.getOutput());
     }
 
 
     public void onModule3BtnClicked(JXTable optionTable) {
-        if (noduleCandidatesMask == null)
-            onModule2BtnClicked(optionTable);
+        OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
-        System.out.println("Nodule Classification");
-        NoduleClassification noduleClassification = new NoduleClassification();
-        noduleClassification.setLungSegImage(lungSegImage);
-        noduleClassification.setNoduleCandidatesMask_(noduleCandidatesMask);
-        noduleClassification.setVesselMask_(veselMask);
+        model.setOptionMap(mModuleClassification.getOptionMap());
 
-        noduleClassification.run();
+        model.fireTableDataChanged();
 
-        dialog.renderItkImage(noduleClassification.getNodulesLabel());
+        if(mModuleLung.getOutput()==null) mModuleLung.applyModule();
+        if(mModuleDetection.getOutput()==null) mModuleDetection.applyModule();
+
+        mModuleClassification.applyModule();
+
+        /* To Viewer */
+        dialog.renderItkImage(mModuleClassification.getOutput());
     }
 }
