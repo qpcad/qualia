@@ -1,6 +1,7 @@
 package com.qualia.controller;
 
 import com.qualia.Module.LungSegmentation;
+import com.qualia.Module.ModuleInterface;
 import com.qualia.Module.NoduleClassification;
 import com.qualia.Module.NoduleDetection;
 import com.qualia.model.Metadata;
@@ -17,6 +18,7 @@ public class VtkViewController {
     private LungSegmentation mModuleLung;
     private NoduleDetection mModuleDetection;
     private NoduleClassification mModuleClassification;
+    private ModuleInterface mTargetModule;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
@@ -31,6 +33,14 @@ public class VtkViewController {
         mModuleClassification = new NoduleClassification(mModuleLung, mModuleDetection);
     }
 
+    public void onApplyButtonClicked(){
+        if(mTargetModule==null) return;
+
+        mTargetModule.applyModule();
+
+        dialog.renderItkImage(mTargetModule.getOutput());
+    }
+
     public void onModule1BtnClicked(JXTable optionTable) {
         OptionTableModel model = (OptionTableModel) optionTable.getModel();
 
@@ -38,9 +48,8 @@ public class VtkViewController {
 
         model.fireTableDataChanged();
 
-        mModuleLung.applyModule();
+        mTargetModule = mModuleLung;
 
-        dialog.renderItkImage(mModuleLung.getOutput());
     }
 
     public void onModule2BtnClicked(JXTable optionTable) {
@@ -54,9 +63,7 @@ public class VtkViewController {
             mModuleLung.applyModule();
         }
 
-        mModuleDetection.applyModule();
-
-        dialog.renderItkImage(mModuleDetection.getOutput());
+        mTargetModule = mModuleDetection;
     }
 
 
@@ -70,9 +77,6 @@ public class VtkViewController {
         if(mModuleLung.getOutput()==null) mModuleLung.applyModule();
         if(mModuleDetection.getOutput()==null) mModuleDetection.applyModule();
 
-        mModuleClassification.applyModule();
-
-        /* To Viewer */
-        dialog.renderItkImage(mModuleClassification.getOutput());
+        mTargetModule = mModuleClassification;
     }
 }

@@ -45,6 +45,15 @@ public class VtkView extends JDialog {
         optionTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         paneBoxLeft.add(optionTable);
 
+        JButton btnApply = new JButton("Apply");
+        btnApply.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                mController.onApplyButtonClicked();
+            }
+        });
+        paneBoxLeft.add(btnApply);
+
         JPanel paneCenter = new JPanel();
         paneCenter.setLayout(new BorderLayout());
         getContentPane().add(paneCenter, BorderLayout.CENTER);
