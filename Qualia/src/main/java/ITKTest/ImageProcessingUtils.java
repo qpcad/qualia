@@ -20,7 +20,7 @@ import org.itk.itktransform.itkIdentityTransformD3;
 /**
  * <pre>
  * kr.qualia
- * ImageProcessingUtils.java
+ * ImageProcessingUtils.getInstance().java
  * FIXME 클래스 설명
  * </pre>
  *
@@ -28,7 +28,16 @@ import org.itk.itktransform.itkIdentityTransformD3;
  * @date 2014. 4. 17.
  */
 final public class ImageProcessingUtils {
-    static private long startTime_;
+    private static ImageProcessingUtils mInstance = null;
+    private long startTime_;
+
+    public static ImageProcessingUtils getInstance() {
+        if (mInstance == null) {
+            mInstance = new ImageProcessingUtils();
+        }
+
+        return mInstance;
+    }
 
     /**
      * <pre>
@@ -38,7 +47,7 @@ final public class ImageProcessingUtils {
      *
      * @method tic
      */
-    static public void tic() {
+    public void tic() {
         startTime_ = System.currentTimeMillis();
     }
 
@@ -50,11 +59,11 @@ final public class ImageProcessingUtils {
      *
      * @method toc
      */
-    static public void toc() {
+    public void toc() {
         System.out.println("Elapsed time " + (System.currentTimeMillis() - startTime_) / 1000.0);
     }
 
-    static public itkImageSS3 imageInterpolation(itkImageSS3 input, double targetSpacing) {
+    public itkImageSS3 imageInterpolation(itkImageSS3 input, double targetSpacing) {
         itkResampleImageFilterISS3ISS3 resampleImage = new itkResampleImageFilterISS3ISS3();
         itkVectorD3 inputSpacing = input.GetSpacing();
         itkVectorD3 outputSpacing = new itkVectorD3(targetSpacing);
@@ -78,12 +87,13 @@ final public class ImageProcessingUtils {
         resampleImage.SetSize(outputSize);
 
         resampleImage.Update();
+        input.DisconnectPipeline();
 
         return resampleImage.GetOutput();
     }
 
 
-    static public itkImageSS3 imageEnhancement(itkImageSS3 input) {
+    public itkImageSS3 imageEnhancement(itkImageSS3 input) {
         itkCastImageFilterISS3IF3 castImageFilterISS3IF3 = new itkCastImageFilterISS3IF3();
         itkGradientAnisotropicDiffusionImageFilterIF3IF3 gradientAnisotropicDiffusionImageFilter = new itkGradientAnisotropicDiffusionImageFilterIF3IF3();
         itkCastImageFilterIF3ISS3 castImageFilterIF3ISS3 = new itkCastImageFilterIF3ISS3();
@@ -94,11 +104,13 @@ final public class ImageProcessingUtils {
         gradientAnisotropicDiffusionImageFilter.SetInput(castImageFilterISS3IF3.GetOutput());
         castImageFilterIF3ISS3.SetInput(gradientAnisotropicDiffusionImageFilter.GetOutput());
 
-        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(5);
+        gradientAnisotropicDiffusionImageFilter.SetNumberOfIterations(3);
         gradientAnisotropicDiffusionImageFilter.SetTimeStep(timeStep);
-        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(15.0);
+        gradientAnisotropicDiffusionImageFilter.SetConductanceParameter(5.0);
 
         castImageFilterIF3ISS3.Update();
+        input.DisconnectPipeline();
+
         return castImageFilterIF3ISS3.GetOutput();
     }
 
@@ -113,12 +125,14 @@ final public class ImageProcessingUtils {
      * @return
      * @method thresholdImage
      */
-    static public itkImageUC3 thresholdImage(itkImageSS3 image, short threshold) {
+    public itkImageUC3 thresholdImage(itkImageSS3 image, short threshold) {
         itkBinaryThresholdImageFilterISS3IUC3 thresholdFilter = new itkBinaryThresholdImageFilterISS3IUC3();
 
         thresholdFilter.SetInput(image);
         thresholdFilter.SetUpperThreshold(threshold);
         thresholdFilter.Update();
+
+        image.DisconnectPipeline();
 
         return thresholdFilter.GetOutput();
     }
@@ -134,12 +148,14 @@ final public class ImageProcessingUtils {
      * @return
      * @method thresholdImageL
      */
-    static public itkImageUC3 thresholdImageL(itkImageSS3 image, short threshold) {
+    public itkImageUC3 thresholdImageL(itkImageSS3 image, short threshold) {
         itkBinaryThresholdImageFilterISS3IUC3 thresholdFilter = new itkBinaryThresholdImageFilterISS3IUC3();
 
         thresholdFilter.SetInput(image);
         thresholdFilter.SetLowerThreshold(threshold);
         thresholdFilter.Update();
+
+        image.DisconnectPipeline();
 
         return thresholdFilter.GetOutput();
     }
@@ -154,7 +170,7 @@ final public class ImageProcessingUtils {
      * @return
      * @method labelMapToRGB
      */
-    static public itkImageRGBUC3 labelMapToRGB(itkLabelMap3 labelMap) {
+    public itkImageRGBUC3 labelMapToRGB(itkLabelMap3 labelMap) {
         itkLabelMapToRGBImageFilterLM3IRGBUC3 labelToRGB = new itkLabelMapToRGBImageFilterLM3IRGBUC3();
         labelToRGB.SetInput(labelMap);
         labelToRGB.Update();
@@ -173,7 +189,7 @@ final public class ImageProcessingUtils {
      * @param fileName
      * @method writeLabelMapOverlay
      */
-    static public void writeLabelMapOverlay(itkLabelMap3 labelMap, itkImageSS3 image, String fileName) {
+    public void writeLabelMapOverlay(itkLabelMap3 labelMap, itkImageSS3 image, String fileName) {
         itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBin = new itkLabelMapToBinaryImageFilterLM3IUC3();
         itkConnectedComponentImageFilterIUC3ISS3 connectedComponentFilter = new itkConnectedComponentImageFilterIUC3ISS3();
         itkLabelOverlayImageFilterIUC3ISS3IRGBUC3 labelOverlay = new itkLabelOverlayImageFilterIUC3ISS3IRGBUC3();
@@ -201,7 +217,7 @@ final public class ImageProcessingUtils {
      * @param fileName
      * @method writeImage
      */
-    static public void writeImage(itkImageSS3 image, String fileName) {
+    public void writeImage(itkImageSS3 image, String fileName) {
         itkImageFileWriterISS3 writer = new itkImageFileWriterISS3();
         writer.SetInput(image);
         writer.SetFileName(fileName);
@@ -218,7 +234,7 @@ final public class ImageProcessingUtils {
      * @param fileName
      * @method writeImage
      */
-    static public void writeImage(itkImageRGBUC3 image, String fileName) {
+    public void writeImage(itkImageRGBUC3 image, String fileName) {
         itkImageFileWriterIRGBUC3 writer = new itkImageFileWriterIRGBUC3();
         writer.SetInput(image);
         writer.SetFileName(fileName);

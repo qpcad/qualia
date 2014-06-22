@@ -65,7 +65,7 @@ public class NoduleCandidatesDetection implements Runnable {
 
 
     public void run() {
-        ImageProcessingUtils.tic();
+        ImageProcessingUtils.getInstance().tic();
 
 		/* Lung Masking */
         itkMaskImageFilterISS3IUC3ISS3 maskFilter = new itkMaskImageFilterISS3IUC3ISS3();
@@ -97,8 +97,8 @@ public class NoduleCandidatesDetection implements Runnable {
         addImageFilter1.SetInput1(addImageFilter.GetOutput());
         addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
 
-        maskImageFilter.SetOutsideValue((short) -100);
-        maskImageFilter1.SetOutsideValue((short) -100);
+        maskImageFilter.SetOutsideValue((short) -300);
+        maskImageFilter1.SetOutsideValue((short) -300);
 
         addImageFilter1.Update();
 
@@ -121,7 +121,7 @@ public class NoduleCandidatesDetection implements Runnable {
 
         int step = 8;
         int maxThreshold = -100;
-        int minThreshold = -800;
+        int minThreshold = -700;
 
         noduleCandidates_ = new itkLabelMap3();
         vesselMap_ = new itkLabelMap3();
@@ -138,8 +138,8 @@ public class NoduleCandidatesDetection implements Runnable {
 
             for (int r = seRadius; r >= 0; r--) {
                 if (threshold < -600 && r < 1) continue; // too many noises
-                if (threshold < -700 && r < 2) continue; // too many noises
-                itkImageUC3 noduleThresholdImage = ImageProcessingUtils.thresholdImageL(lungSegImage, threshold);
+
+                itkImageUC3 noduleThresholdImage = ImageProcessingUtils.getInstance().thresholdImageL(lungSegImage, threshold);
 
                 System.out.println("T: " + threshold + " R: " + r);
 
@@ -167,7 +167,7 @@ public class NoduleCandidatesDetection implements Runnable {
 
                 labelMapFilter.Update();
 
-                ImageProcessingUtils.toc();
+                ImageProcessingUtils.getInstance().toc();
 
                 long labels = labelMapFilter.GetOutput().GetNumberOfLabelObjects();
                 for (long l = 1; l <= labels; l++) {
@@ -228,7 +228,7 @@ public class NoduleCandidatesDetection implements Runnable {
                 System.out.println("Objects " + labels + " " + noduleCandidates_.GetNumberOfLabelObjects());
                 System.out.println(new_label + ", " + new_vlabel);
             }
-            ImageProcessingUtils.toc();
+            ImageProcessingUtils.getInstance().toc();
         }
 
         {
@@ -252,10 +252,10 @@ public class NoduleCandidatesDetection implements Runnable {
             vesselMask_ = labelMapToBinaryImageFilter.GetOutput();
             vesselMap_ = binaryImageToLabelMapFilter.GetOutput();
         }
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
 
-        //ImageProcessingUtils.writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");
+        //ImageProcessingUtils.getInstance().writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");
     }
 
     public itkImageSS3 getNoduleCandidatesLabel() {

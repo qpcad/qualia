@@ -50,7 +50,7 @@ public class NoduleClassification implements Runnable {
         nodules_ = new itkLabelMap3();
         nodules_.CopyInformation(lungSegImage_);
 
-        ImageProcessingUtils.tic();
+        ImageProcessingUtils.getInstance().tic();
 
         labelMapFilter.SetInput1(noduleCandidatesMask_);
         labelMapFilter.SetInput2(lungSegImage_);
@@ -61,7 +61,7 @@ public class NoduleClassification implements Runnable {
 
         labelMapFilter.Update();
 
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
         long labels = labelMapFilter.GetOutput().GetNumberOfLabelObjects();
         for (long l = 1; l <= labels; l++) {
@@ -108,7 +108,7 @@ public class NoduleClassification implements Runnable {
         System.out.println("Objects " + labels + " " + nodules_.GetNumberOfLabelObjects());
         nodules_.Update();
 
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
         itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
         itkBinaryImageToLabelMapFilterIUC3LM3 binaryImageToLabelMapFilter = new itkBinaryImageToLabelMapFilterIUC3LM3();
@@ -119,7 +119,7 @@ public class NoduleClassification implements Runnable {
         nodulesMask_ = labelMapToBinaryImageFilter.GetOutput();
         nodules_ = binaryImageToLabelMapFilter.GetOutput();
 
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
@@ -136,12 +136,12 @@ public class NoduleClassification implements Runnable {
         addImageFilter1.SetInput1(addImageFilter.GetOutput());
         addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
 
-        maskImageFilter.SetOutsideValue((short) -100);
-        maskImageFilter1.SetOutsideValue((short) -100);
+        maskImageFilter.SetOutsideValue((short) -300);
+        maskImageFilter1.SetOutsideValue((short) -300);
 
         addImageFilter1.Update();
 
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
         nodulesLabel_ = addImageFilter1.GetOutput();
     }

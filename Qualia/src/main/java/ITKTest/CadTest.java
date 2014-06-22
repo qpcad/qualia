@@ -109,7 +109,7 @@ public class CadTest {
         System.out.println("Lung Image Interpolation");
         /* Interpolation from anisotropic to isotropic voxel*/
         if (isIsotropic == true) {
-            ImageProcessingUtils.tic();
+            ImageProcessingUtils.getInstance().tic();
             itkResampleImageFilterISS3ISS3 resampleImage = new itkResampleImageFilterISS3ISS3();
             itkVectorD3 inputSpacing = originalLungImage.GetSpacing();
             itkVectorD3 outputSpacing = new itkVectorD3(1);
@@ -135,7 +135,7 @@ public class CadTest {
             resampleImage.Update();
 
             lungImage = resampleImage.GetOutput();
-            ImageProcessingUtils.toc();
+            ImageProcessingUtils.getInstance().toc();
         }
 
         System.out.println("Lung Segmentation");
@@ -157,8 +157,8 @@ public class CadTest {
         lungSegImage = maskFilter.GetOutput();
 
 		/* Output Lung Segmentation */
-        ImageProcessingUtils.writeImage(lungSegImage, OUTPUT_LUNG_IMAGE1);
-        ImageProcessingUtils.writeImage(lungSegFilter.getLabelImage(), OUTPUT_LUNG_IMAGE2);
+        ImageProcessingUtils.getInstance().writeImage(lungSegImage, OUTPUT_LUNG_IMAGE1);
+        ImageProcessingUtils.getInstance().writeImage(lungSegFilter.getLabelImage(), OUTPUT_LUNG_IMAGE2);
 
 
         System.out.println("Nodule Candidates Detection");
@@ -168,7 +168,7 @@ public class CadTest {
         noduleCandidateDetection.setLungMask(lungSegFilter.getLungMask());
         noduleCandidateDetection.run();
 
-        ImageProcessingUtils.writeLabelMapOverlay(noduleCandidateDetection.getNoduleCandidates(), lungSegImage, OUTPUT_NODULE_IMAGE1);
+        ImageProcessingUtils.getInstance().writeLabelMapOverlay(noduleCandidateDetection.getNoduleCandidates(), lungSegImage, OUTPUT_NODULE_IMAGE1);
     }
 
     /**

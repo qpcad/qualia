@@ -134,7 +134,7 @@ public class VtkView extends JDialog {
     vtkImageData itkImageToVtkVolume(itkImageSS3 input) {
         vtkImageData outputImage;
 
-        ImageProcessingUtils.tic();
+        ImageProcessingUtils.getInstance().tic();
 
         itkThresholdImageFilterISS3 threshold_below = new itkThresholdImageFilterISS3();
         itkAddImageFilterISS3ISS3ISS3 addImageFilter = new itkAddImageFilterISS3ISS3ISS3();
@@ -151,7 +151,7 @@ public class VtkView extends JDialog {
         itkVtkFilter.Update();
 
         outputImage = itkVtkFilter.GetOutput();
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
 
         return outputImage;
     }

@@ -217,7 +217,7 @@ public class LungSegmentation implements Runnable {
      * @method getLungLabelMap
      */
     private itkLabelMap3 getLungLabelMap() {
-        itkImageUC3 lungThresholdImage = ImageProcessingUtils.thresholdImage(lungImage_, (short) -600);
+        itkImageUC3 lungThresholdImage = ImageProcessingUtils.getInstance().thresholdImage(lungImage_, (short) -600);
         itkImageUC3 initialLungMask = removeRim(lungThresholdImage);
 
         itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
@@ -232,9 +232,9 @@ public class LungSegmentation implements Runnable {
     }
 
     public void run() {
-        ImageProcessingUtils.tic();
+        ImageProcessingUtils.getInstance().tic();
         itkLabelMap3 lungLabelMap = getLungLabelMap();
-        labelImage_ = ImageProcessingUtils.labelMapToRGB(lungLabelMap);
+        labelImage_ = ImageProcessingUtils.getInstance().labelMapToRGB(lungLabelMap);
 
         System.out.println(lungLabelMap.GetNumberOfLabelObjects());
 
@@ -244,6 +244,6 @@ public class LungSegmentation implements Runnable {
 
         lungMask_ = refineLungMask(lungLabelMap);
 
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().toc();
     }
 }

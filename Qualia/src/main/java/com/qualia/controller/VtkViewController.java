@@ -51,16 +51,18 @@ public class VtkViewController {
 
 
         System.out.println("Image interpolation");
-        ImageProcessingUtils.tic();
-        itkImageSS3 isoLungImage = ImageProcessingUtils.imageInterpolation(lungImage, 0.8);
-        ImageProcessingUtils.toc();
+        ImageProcessingUtils.getInstance().tic();
+        itkImageSS3 isoLungImage = ImageProcessingUtils.getInstance().getInstance().imageInterpolation(lungImage, 1.0);
+        ImageProcessingUtils.getInstance().toc();
 
-        System.out.println("Image enhancement");
-        ImageProcessingUtils.tic();
-        itkImageSS3 enhancedLungImage = ImageProcessingUtils.imageEnhancement(isoLungImage);
-        ImageProcessingUtils.toc();
+        lungImage = isoLungImage;
 
-        lungImage = enhancedLungImage;
+//        System.out.println("Image enhancement");
+//        ImageProcessingUtils.getInstance().tic();
+//        itkImageSS3 enhancedLungImage = ImageProcessingUtils.getInstance().imageEnhancement(isoLungImage);
+//        ImageProcessingUtils.getInstance().toc();
+//
+//        lungImage = enhancedLungImage;
 
         System.out.println("Lung Segmentation");
         /* Lung Segmentation */

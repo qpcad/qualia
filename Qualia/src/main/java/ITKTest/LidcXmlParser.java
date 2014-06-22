@@ -83,7 +83,7 @@ public class LidcXmlParser {
 
             String fileName = "/Users/taznux/Desktop/rnodule" + si + ".mha";
 
-            ImageProcessingUtils.writeLabelMapOverlay(noduleMap, lungImage_, fileName);
+            ImageProcessingUtils.getInstance().writeLabelMapOverlay(noduleMap, lungImage_, fileName);
         }
     }
 
