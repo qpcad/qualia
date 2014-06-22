@@ -164,8 +164,10 @@ public class MainView extends JFrame {
         }
     }
 
-    private static JButton getImageButton(String name, String resources, int width, int height){
-        ImageIcon iconImport = new ImageIcon("src/main/resources/" + resources);
+    private JButton getImageButton(String name, String resources, int width, int height){
+        URL resourceUrl = getClass().getClassLoader().getResource(resources);
+        ImageIcon iconImport = new ImageIcon(resourceUrl);
+
         Image imageImport = iconImport.getImage().getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
         return  new JButton(new ImageIcon(imageImport));
     }
