@@ -9,6 +9,8 @@ import vtk.vtkInteractorStyleImage;
 import vtk.vtkRenderWindowPanel;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -24,6 +26,19 @@ public class MainView extends JFrame {
     private JXTreeTable mTreeTable;
     private JButton mBtnImport;
     private vtkRenderWindowPanel mRightPanel;
+    private int[] columnWidth = {
+        220,
+        180,
+        80,
+        40,
+        40,
+        55,
+        55,
+        75,
+        75,
+        75,
+        155
+    };
 
     public MainView(final MainViewController controller, final MetaTableTreeModel tableModel) {
 
@@ -89,6 +104,10 @@ public class MainView extends JFrame {
         });
         mTreeTable.setRootVisible(false);
 
+        changeTableColumnWidth(mTreeTable, columnWidth);
+
+
+
         getContentPane().add(new JScrollPane(mTreeTable), BorderLayout.CENTER);
 
         JSplitPane splitPane = new JSplitPane();
@@ -132,9 +151,21 @@ public class MainView extends JFrame {
         mRightPanel.Render();
     }
 
-    private JButton getImageButton(String name, String resources, int width, int height) {
-        URL resourceUrl = getClass().getClassLoader().getResource(resources);
-        ImageIcon iconImport = new ImageIcon(resourceUrl);
+    private static void changeTableColumnWidth(JTable table, int[] widthList){
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+
+        TableColumn column;
+
+        for(int i=0;i<widthList.length;i++){
+            column = table.getColumnModel().getColumn(i);
+            column.setCellRenderer( centerRenderer );
+            column.setPreferredWidth(widthList[i]);
+        }
+    }
+
+    private static JButton getImageButton(String name, String resources, int width, int height){
+        ImageIcon iconImport = new ImageIcon("src/main/resources/" + resources);
         Image imageImport = iconImport.getImage().getScaledInstance(width, height, java.awt.Image.SCALE_SMOOTH);
         return  new JButton(new ImageIcon(imageImport));
     }
