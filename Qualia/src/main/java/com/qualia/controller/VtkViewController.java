@@ -27,35 +27,35 @@ public class VtkViewController {
         dialog.setModel(model);
 
         mViewerSetting = new ViewerSetting(dialog);
+        mViewerSetting.setVisible(true);
         dialog.paneModule.add(mViewerSetting);
-        dialog.paneModule.updateUI();
 
         mModuleSegmentation = new LungSegmentation(dialog, model);
+        mModuleSegmentation.setVisible(false);
+        dialog.paneModule.add(mModuleSegmentation);
+
         mModuleDetection = new NoduleDetection(dialog, mModuleSegmentation);
+        mModuleDetection.setVisible(false);
+        dialog.paneModule.add(mModuleDetection);
+
         mModuleClassification = new NoduleClassification(dialog, mModuleSegmentation, mModuleDetection);
+        mModuleClassification.setVisible(false);
+        dialog.paneModule.add(mModuleClassification);
     }
 
     public void onModule1BtnClicked() {
-        dialog.paneModule.add(mModuleSegmentation);
-        dialog.paneModule.updateUI();
+        mModuleSegmentation.setVisible(!mModuleSegmentation.isVisible());
     }
 
     public void onModule2BtnClicked() {
-        if (mModuleSegmentation.getOutput() == null) onModule1BtnClicked();
-
-        dialog.paneModule.add(mModuleDetection);
-        dialog.paneModule.updateUI();
+        mModuleDetection.setVisible(!mModuleDetection.isVisible());
     }
 
     public void onModule3BtnClicked() {
-        if (mModuleDetection.getOutput() == null) onModule2BtnClicked();
-
-        dialog.paneModule.add(mModuleClassification);
-        dialog.paneModule.updateUI();
+        mModuleClassification.setVisible(!mModuleClassification.isVisible());
     }
 
     public void onModuleViewerSettingBtnClicked() {
-        dialog.paneModule.add(mViewerSetting);
-        dialog.paneModule.updateUI();
+        mViewerSetting.setVisible(!mViewerSetting.isVisible());
     }
 }

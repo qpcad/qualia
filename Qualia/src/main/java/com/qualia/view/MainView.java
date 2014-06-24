@@ -4,9 +4,7 @@ import com.qualia.controller.MainViewController;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import org.jdesktop.swingx.JXTreeTable;
-import vtk.vtkImageViewer2;
-import vtk.vtkInteractorStyleImage;
-import vtk.vtkRenderWindowPanel;
+import vtk.vtkImageData;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,7 +23,7 @@ public class MainView extends JFrame {
 
     private JXTreeTable mTreeTable;
     private JButton mBtnImport;
-    private vtkRenderWindowPanel mRightPanel;
+    private VtkSliceRenderPanel mRightPanel;
     private int[] columnWidth = {
         220,
         180,
@@ -116,9 +114,21 @@ public class MainView extends JFrame {
         JPanel panel_1 = new JPanel();
         splitPane.setLeftComponent(panel_1);
 
-        mRightPanel = new vtkRenderWindowPanel();
+        mRightPanel = new VtkSliceRenderPanel();
         splitPane.setRightComponent(mRightPanel);
-        mRightPanel.setInteractorStyle(new vtkInteractorStyleImage());
+    }
+
+    private static void changeTableColumnWidth(JTable table, int[] widthList) {
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        TableColumn column;
+
+        for (int i = 0; i < widthList.length; i++) {
+            column = table.getColumnModel().getColumn(i);
+            column.setCellRenderer(centerRenderer);
+            column.setPreferredWidth(widthList[i]);
+        }
     }
 
     public void init() {
@@ -132,36 +142,8 @@ public class MainView extends JFrame {
         mTreeTable.updateUI();
     }
 
-    public void updateRightPanel(vtkImageViewer2 imageViewer) {
-        imageViewer.SetRenderWindow(mRightPanel.GetRenderWindow());
-        imageViewer.SetupInteractor(mRightPanel.GetRenderWindow().GetInteractor());
-
-        imageViewer.SetColorLevel(-500);
-        imageViewer.SetColorWindow(3000);
-
-        int sliceMin, sliceMax, sliceMiddle;
-
-        sliceMin = imageViewer.GetSliceMin();
-        sliceMax = imageViewer.GetSliceMax();
-        sliceMiddle = (sliceMax - sliceMin) / 2;
-
-        imageViewer.SetSlice(sliceMiddle);
-        imageViewer.SetSliceOrientationToXY();
-
-        mRightPanel.Render();
-    }
-
-    private static void changeTableColumnWidth(JTable table, int[] widthList){
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
-
-        TableColumn column;
-
-        for(int i=0;i<widthList.length;i++){
-            column = table.getColumnModel().getColumn(i);
-            column.setCellRenderer( centerRenderer );
-            column.setPreferredWidth(widthList[i]);
-        }
+    public void updateRightPanel(vtkImageData inputImage) {
+        mRightPanel.render(inputImage, VtkSliceRenderPanel.ORIENTATION_XY);
     }
 
     private JButton getImageButton(String name, String resources, int width, int height){

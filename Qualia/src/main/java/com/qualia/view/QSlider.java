@@ -25,11 +25,11 @@ public class QSlider extends JPanel {
         mSlider = new JSlider();
         mSlider.setPaintLabels(true);
         mSlider.setPaintTicks(true);
-        mSlider.setPreferredSize(new Dimension(200, 50));
+        mSlider.setPreferredSize(new Dimension(200, 30));
         add(mSlider, BorderLayout.CENTER);
 
         mTextField = new JTextField();
-        mTextField.setPreferredSize(new Dimension(50, 16));
+        mTextField.setPreferredSize(new Dimension(50, 20));
         mTextField.setHorizontalAlignment(JTextField.RIGHT);
         add(mTextField, BorderLayout.EAST);
 

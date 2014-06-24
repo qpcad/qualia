@@ -26,6 +26,9 @@ public class VtkView extends JDialog {
     private VtkSliceRenderPanel panelTopLeft;
     private VtkSliceRenderPanel panelBottomLeft;
     private VtkSliceRenderPanel panelBottomRight;
+    private boolean volumeViewerOn = false;
+    private vtkImageData vtkImageData = null;
+    private vtkImageData vtkVolumeImageData = null;
 
 
     public VtkView(Metadata model, VtkViewController controller) {
@@ -115,14 +118,14 @@ public class VtkView extends JDialog {
         renderItkImage(image);
     }
 
-    public void renderSlice(vtkImageData image) {
-        panelTopLeft.render(image, VtkSliceRenderPanel.ORIENTATION_XY);
-        panelBottomLeft.render(image, VtkSliceRenderPanel.ORIENTATION_YZ);
-        panelBottomRight.render(image, VtkSliceRenderPanel.ORIENTATION_XZ);
+    public void renderSlice() {
+        panelTopLeft.render(vtkImageData, VtkSliceRenderPanel.ORIENTATION_XY);
+        panelBottomLeft.render(vtkImageData, VtkSliceRenderPanel.ORIENTATION_YZ);
+        panelBottomRight.render(vtkImageData, VtkSliceRenderPanel.ORIENTATION_XZ);
     }
 
-    public void renderVolume(vtkImageData image) {
-        panelTopRight.render(image);
+    public void renderVolume() {
+        panelTopRight.render(vtkVolumeImageData);
     }
 
     vtkImageData itkImageToVtkVolume(itkImageSS3 input) {
@@ -179,12 +182,24 @@ public class VtkView extends JDialog {
     }
 
     public void renderItkImage(itkImageSS3 image) {
-        renderSlice(itkImageToVtk(image));
-        renderVolume(itkImageToVtkVolume(image));
+        vtkImageData = itkImageToVtk(image);
+        vtkVolumeImageData = itkImageToVtkVolume(image);
+
+        renderSlice();
+        if (isVolumeViewerOn()) renderVolume();
     }
 
-    public void renderItkImage(itkImageSS3 image, itkLabelMap3 labelMap) {
-        renderSlice(itkImageToVtk(image));
-        renderVolume(itkLabelMapToVtkVolume(labelMap));
+    public void onVolumeViewer() {
+        volumeViewerOn = true;
+        renderVolume();
+    }
+
+    public void offVolumeViewer() {
+        volumeViewerOn = false;
+        panelTopRight.clear();
+    }
+
+    public boolean isVolumeViewerOn() {
+        return volumeViewerOn;
     }
 }

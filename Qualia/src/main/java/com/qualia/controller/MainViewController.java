@@ -10,13 +10,24 @@ import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
-import vtk.vtkImageViewer2;
+import vtk.vtkNativeLibrary;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.io.File;
 
 public class MainViewController {
+    static {
+        if (!vtkNativeLibrary.LoadAllNativeLibraries()) {
+            for (vtkNativeLibrary lib : vtkNativeLibrary.values()) {
+                if (!lib.IsLoaded()) {
+                    System.out.println(lib.GetLibraryName() + " not loaded");
+                }
+            }
+        }
+        vtkNativeLibrary.DisableOutputWindow(null);
+    }
+
     private final static String DATABASE_URL = "jdbc:sqlite:qualia.db:metadata";
     private MainView mMainView;
     private ConnectionSource connectionSource = null;
@@ -94,12 +105,7 @@ public class MainViewController {
         System.out.println("clicked");
         System.out.println(targetMetadata.toString());
 
-        vtkImageViewer2 imageViewer = new vtkImageViewer2();
-
-        imageViewer.SetInputData(VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId));
-        imageViewer.GetRenderer().ResetCamera();
-
-        mMainView.updateRightPanel(imageViewer);
+        mMainView.updateRightPanel(VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId));
     }
 
     public void onTableDataDoubleClicked(Metadata targetMetadata) {

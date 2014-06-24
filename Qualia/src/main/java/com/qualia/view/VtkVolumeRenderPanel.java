@@ -121,4 +121,13 @@ public class VtkVolumeRenderPanel extends vtkRenderWindowPanel {
 
         return volumeProperty;
     }
+
+    public void clear() {
+        this.GetRenderWindow().GetRenderers().RemoveAllItems();
+        vtkRenderer ren = new vtkRenderer();
+
+        this.GetRenderWindow().AddRenderer(ren);
+
+        Render();
+    }
 }

@@ -224,10 +224,10 @@ public class NoduleDetection extends ModuleBase {
         //ImageProcessingUtils.getInstance().writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");
     }
 
-    public synchronized void detection() {
+    public void detection() {
         ImageProcessingUtils.getInstance().tic();
 
-        setProgress(0);
+        setProgress(1);
 
         itkImageSS3 lungSegImage = mModuleSegmentation.getOutput();
 
@@ -270,15 +270,8 @@ public class NoduleDetection extends ModuleBase {
     @Override
     public void run() {
         if (mModuleSegmentation.getOutput() == null) {
-            mModuleSegmentation.applyModule();
-
-            while (mModuleSegmentation.getProgress() < 100) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            mModuleSegmentation.setVisible(true);
+            mModuleSegmentation.run();
         }
         detection();
     }

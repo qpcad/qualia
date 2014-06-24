@@ -225,9 +225,9 @@ public class LungSegmentation extends ModuleBase {
     }
 
     private synchronized void segmentation() {
-        setProgress(0);
-
         mImageLung = ItkImageArchive.getInstance().getItkImage(mModel.uId);
+
+        setProgress(1);
 
 
         System.out.println("Image interpolation");

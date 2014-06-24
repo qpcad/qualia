@@ -12,21 +12,14 @@ import org.itk.itklabelmap.*;
 
 public class NoduleClassification extends ModuleBase {
     VtkView mDialog = null;
-    ;
 
     LungSegmentation mModuleSegmentation = null;
-    ;
     NoduleDetection mModuleDetection = null;
-    ;
     itkImageSS3 mOutput;
-    ;
     private itkImageSS3 mLungSegImage = null;
-    ;
     private itkImageUC3 mNoduleCandidatesMask = null;
     private itkLabelMap3 mNodules = null;
-    ;
     private itkImageUC3 mNodulesMask = null;
-    ;
     private itkImageUC3 mVesselMask = null;
 
     public NoduleClassification(VtkView dialog, LungSegmentation moduleSegment, NoduleDetection moduleDetection) {
@@ -51,6 +44,8 @@ public class NoduleClassification extends ModuleBase {
         mNodules = new itkLabelMap3();
         mNodules.CopyInformation(mLungSegImage);
 
+        setProgress(1);
+
         ImageProcessingUtils.getInstance().tic();
 
         labelMapFilter.SetInput1(mNoduleCandidatesMask);
@@ -63,6 +58,7 @@ public class NoduleClassification extends ModuleBase {
         labelMapFilter.Update();
 
         ImageProcessingUtils.getInstance().toc();
+        setProgress(10);
 
         long labels = labelMapFilter.GetOutput().GetNumberOfLabelObjects();
         for (long l = 1; l <= labels; l++) {
@@ -109,6 +105,8 @@ public class NoduleClassification extends ModuleBase {
         System.out.println("Objects " + labels + " " + mNodules.GetNumberOfLabelObjects());
         mNodules.Update();
 
+        setProgress(20);
+
         ImageProcessingUtils.getInstance().toc();
 
         itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
@@ -121,6 +119,8 @@ public class NoduleClassification extends ModuleBase {
         mNodules = binaryImageToLabelMapFilter.GetOutput();
 
         ImageProcessingUtils.getInstance().toc();
+
+        setProgress(50);
 
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
         itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
@@ -154,15 +154,8 @@ public class NoduleClassification extends ModuleBase {
     @Override
     public void run() {
         if (mModuleDetection.getOutput() == null) {
-            mModuleDetection.applyModule();
-
-            while (mModuleDetection.getProgress() < 100) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+            mModuleDetection.setVisible(true);
+            mModuleDetection.run();
         }
 
         classification();

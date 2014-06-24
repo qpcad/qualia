@@ -27,9 +27,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
     private int mColorLevel = -500;
     private int mColorWindow = 3000;
 
-    public VtkSliceRenderPanel(Metadata target) {
-        mModel = target;
-
+    public VtkSliceRenderPanel() {
         mVtkImageViewer = new vtkImageViewer2();
         mRenderWindowPanel = new vtkRenderWindowPanel();
         mSlider = new QSlider();
@@ -41,6 +39,12 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
 
         mSlider.addChangeListener(this);
         addMouseWheelListener(this);
+    }
+
+    public VtkSliceRenderPanel(Metadata target) {
+        this();
+
+        mModel = target;
     }
 
     public void render(vtkImageData image, int orientation) {
