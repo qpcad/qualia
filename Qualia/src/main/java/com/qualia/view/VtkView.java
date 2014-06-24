@@ -4,7 +4,6 @@ import ITKTest.ImageProcessingUtils;
 import com.qualia.controller.VtkViewController;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.model.Metadata;
-import com.qualia.model.OptionTableModel;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itklabelmap.itkLabelMap3;
@@ -12,7 +11,6 @@ import org.itk.itklabelmap.itkLabelMapToBinaryImageFilterLM3IUC3;
 import org.itk.itkthresholding.itkThresholdImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
 import org.itk.itkvtkglue.itkImageToVTKImageFilterIUC3;
-import org.jdesktop.swingx.JXTable;
 import vtk.vtkImageData;
 
 import javax.swing.*;
@@ -21,6 +19,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class VtkView extends JDialog {
+    public JPanel paneModule;
     private VtkViewController mController;
     private Metadata mModel;
     private VtkVolumeRenderPanel panelTopRight;
@@ -33,26 +32,11 @@ public class VtkView extends JDialog {
         mModel = model;
         mController = controller;
 
-        JPanel paneLeft = new JPanel();
-        getContentPane().add(paneLeft, BorderLayout.WEST);
+        paneModule = new JPanel();
+        paneModule.setPreferredSize(new Dimension(300, 100));
+        paneModule.setLayout(new BoxLayout(paneModule, BoxLayout.Y_AXIS));
+        getContentPane().add(paneModule, BorderLayout.WEST);
 
-        JPanel paneBoxLeft = new JPanel();
-        paneBoxLeft.setLayout(new BoxLayout(paneBoxLeft, BoxLayout.Y_AXIS));
-        paneLeft.add(paneBoxLeft);
-
-        final JXTable optionTable = new JXTable(new OptionTableModel());
-        optionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        optionTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        paneBoxLeft.add(optionTable);
-
-        JButton btnApply = new JButton("Apply");
-        btnApply.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent event) {
-                mController.onApplyButtonClicked();
-            }
-        });
-        paneBoxLeft.add(btnApply);
 
         JPanel paneCenter = new JPanel();
         paneCenter.setLayout(new BorderLayout());
@@ -66,6 +50,7 @@ public class VtkView extends JDialog {
         btnSetting.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
+                mController.onModuleViewerSettingBtnClicked();
             }
         });
         toolBar.add(btnSetting);
@@ -74,7 +59,7 @@ public class VtkView extends JDialog {
         btnModule1.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                mController.onModule1BtnClicked(optionTable);
+                mController.onModule1BtnClicked();
             }
         });
         toolBar.add(btnModule1);
@@ -83,7 +68,7 @@ public class VtkView extends JDialog {
         btnModule2.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                mController.onModule2BtnClicked(optionTable);
+                mController.onModule2BtnClicked();
             }
         });
         toolBar.add(btnModule2);
@@ -92,7 +77,7 @@ public class VtkView extends JDialog {
         btnModule3.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                mController.onModule3BtnClicked(optionTable);
+                mController.onModule3BtnClicked();
             }
         });
         toolBar.add(btnModule3);

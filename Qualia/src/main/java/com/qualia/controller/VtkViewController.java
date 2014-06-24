@@ -1,13 +1,11 @@
 package com.qualia.controller;
 
 import com.qualia.Module.LungSegmentation;
-import com.qualia.Module.ModuleInterface;
 import com.qualia.Module.NoduleClassification;
 import com.qualia.Module.NoduleDetection;
+import com.qualia.Module.ViewerSetting;
 import com.qualia.model.Metadata;
-import com.qualia.model.OptionTableModel;
 import com.qualia.view.VtkView;
-import org.jdesktop.swingx.JXTable;
 
 import javax.swing.*;
 
@@ -15,10 +13,10 @@ public class VtkViewController {
     Metadata mModel;
     VtkView dialog;
 
-    private LungSegmentation mModuleLung;
+    private ViewerSetting mViewerSetting;
+    private LungSegmentation mModuleSegmentation;
     private NoduleDetection mModuleDetection;
     private NoduleClassification mModuleClassification;
-    private ModuleInterface mTargetModule;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
@@ -28,55 +26,36 @@ public class VtkViewController {
 
         dialog.setModel(model);
 
-        mModuleLung = new LungSegmentation(model);
-        mModuleDetection = new NoduleDetection(mModuleLung);
-        mModuleClassification = new NoduleClassification(mModuleLung, mModuleDetection);
+        mViewerSetting = new ViewerSetting(dialog);
+        dialog.paneModule.add(mViewerSetting);
+        dialog.paneModule.updateUI();
+
+        mModuleSegmentation = new LungSegmentation(dialog, model);
+        mModuleDetection = new NoduleDetection(dialog, mModuleSegmentation);
+        mModuleClassification = new NoduleClassification(dialog, mModuleSegmentation, mModuleDetection);
     }
 
-    public void onApplyButtonClicked(){
-        if(mTargetModule==null) return;
-
-        mTargetModule.applyModule();
-
-        dialog.renderItkImage(mTargetModule.getOutput());
+    public void onModule1BtnClicked() {
+        dialog.paneModule.add(mModuleSegmentation);
+        dialog.paneModule.updateUI();
     }
 
-    public void onModule1BtnClicked(JXTable optionTable) {
-        OptionTableModel model = (OptionTableModel) optionTable.getModel();
+    public void onModule2BtnClicked() {
+        if (mModuleSegmentation.getOutput() == null) onModule1BtnClicked();
 
-        model.setOptionMap(mModuleLung.getOptionMap());
-
-        model.fireTableDataChanged();
-
-        mTargetModule = mModuleLung;
-
+        dialog.paneModule.add(mModuleDetection);
+        dialog.paneModule.updateUI();
     }
 
-    public void onModule2BtnClicked(JXTable optionTable) {
-        OptionTableModel model = (OptionTableModel) optionTable.getModel();
+    public void onModule3BtnClicked() {
+        if (mModuleDetection.getOutput() == null) onModule2BtnClicked();
 
-        model.setOptionMap(mModuleDetection.getOptionMap());
-
-        model.fireTableDataChanged();
-
-        if((mModuleLung.getOutput()==null)){
-            mModuleLung.applyModule();
-        }
-
-        mTargetModule = mModuleDetection;
+        dialog.paneModule.add(mModuleClassification);
+        dialog.paneModule.updateUI();
     }
 
-
-    public void onModule3BtnClicked(JXTable optionTable) {
-        OptionTableModel model = (OptionTableModel) optionTable.getModel();
-
-        model.setOptionMap(mModuleClassification.getOptionMap());
-
-        model.fireTableDataChanged();
-
-        if(mModuleLung.getOutput()==null) mModuleLung.applyModule();
-        if(mModuleDetection.getOutput()==null) mModuleDetection.applyModule();
-
-        mTargetModule = mModuleClassification;
+    public void onModuleViewerSettingBtnClicked() {
+        dialog.paneModule.add(mViewerSetting);
+        dialog.paneModule.updateUI();
     }
 }

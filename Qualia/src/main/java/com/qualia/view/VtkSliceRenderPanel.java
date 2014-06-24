@@ -23,7 +23,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
     private Metadata mModel;
     private vtkImageViewer2 mVtkImageViewer;
     private vtkRenderWindowPanel mRenderWindowPanel;
-    private JSlider mSlider;
+    private QSlider mSlider;
     private int mColorLevel = -500;
     private int mColorWindow = 3000;
 
@@ -32,7 +32,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
 
         mVtkImageViewer = new vtkImageViewer2();
         mRenderWindowPanel = new vtkRenderWindowPanel();
-        mSlider = new JSlider();
+        mSlider = new QSlider();
         mRenderWindowPanel.setInteractorStyle(new vtkInteractorStyleImage());
 
         setLayout(new BorderLayout());
@@ -62,8 +62,7 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
         sliceMin = mVtkImageViewer.GetSliceMin();
         sliceMax = mVtkImageViewer.GetSliceMax();
 
-        mSlider.setMaximum(sliceMax);
-        mSlider.setMinimum(sliceMin);
+        mSlider.setMinMax(sliceMin, sliceMax);
 
         setSliceIndex((sliceMax - sliceMin) / 2);
 
@@ -85,6 +84,8 @@ public class VtkSliceRenderPanel extends JPanel implements ChangeListener, Mouse
     }
 
     public void setSliceIndex(int index) {
+        if (index < mVtkImageViewer.GetSliceMin()) index = mVtkImageViewer.GetSliceMin();
+        if (index > mVtkImageViewer.GetSliceMax()) index = mVtkImageViewer.GetSliceMax();
         mSlider.setValue(index);
         mVtkImageViewer.Render();
     }
