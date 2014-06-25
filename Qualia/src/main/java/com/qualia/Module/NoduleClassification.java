@@ -2,12 +2,16 @@ package com.qualia.Module;
 
 import ITKTest.ImageProcessingUtils;
 import com.qualia.view.VtkView;
+import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkcommon.itkImageUC3;
+import org.itk.itkcommon.itkSize2;
 import org.itk.itkcommon.itkVectorD3;
+import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
 import org.itk.itkimageintensity.itkAddImageFilterISS3ISS3ISS3;
 import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
+import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
 
 public class NoduleClassification extends ModuleBase {
@@ -48,8 +52,20 @@ public class NoduleClassification extends ModuleBase {
 
         ImageProcessingUtils.getInstance().tic();
 
-        labelMapFilter.SetInput1(mNoduleCandidatesMask);
+        itkSliceBySliceImageFilterIUC3IUC3 sliceBySliceImageFilter = new itkSliceBySliceImageFilterIUC3IUC3();
+        itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2 openingImageFilter = new itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2();
+        itkSize2 radius = new itkSize2();
+        radius.SetElement(0, 1);
+        radius.SetElement(1, 1);
+        itkFlatStructuringElement2 ball = itkFlatStructuringElement2.Box(radius);
+
+        sliceBySliceImageFilter.SetInput(mNoduleCandidatesMask);
+        sliceBySliceImageFilter.SetFilter(openingImageFilter);
+
+        labelMapFilter.SetInput1(sliceBySliceImageFilter.GetOutput());
         labelMapFilter.SetInput2(mLungSegImage);
+
+        openingImageFilter.SetKernel(ball);
 
         labelMapFilter.FullyConnectedOn();
         labelMapFilter.ComputeFeretDiameterOn();
@@ -73,13 +89,15 @@ public class NoduleClassification extends ModuleBase {
             double feretDiameter = labelObject.GetFeretDiameter();
             double mean = labelObject.GetMean();
 
+            System.out.println(l + " " + volume + " " + roundness + " " + elongation + " " + feretDiameter + " " + mean + " " + principalMoments.GetElement(0) + " " + principalMoments.GetElement(1) + " " + principalMoments.GetElement(2));
+
             if (feretDiameter < 3 || volume < Math.pow(1.5, 3) * Math.PI * 4 / 3) { // small object
                 continue;
             }
             if (feretDiameter > 30 || volume > Math.pow(15, 3) * Math.PI * 4 / 3) { // huge object
                 continue;
             }
-            if (roundness < 0.8 || roundness > 1.2 || elongation > 4 || mean > -100) {
+            if (roundness < 0.8 || roundness > 1.2 || elongation > 4 || mean > 100) {
                 continue;
             }
             // vessel overlap check

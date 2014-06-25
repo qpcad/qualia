@@ -224,7 +224,7 @@ public class LungSegmentation extends ModuleBase {
         return labelMap;
     }
 
-    private synchronized void segmentation() {
+    private void segmentation() {
         mImageLung = ItkImageArchive.getInstance().getItkImage(mModel.uId);
 
         setProgress(1);

@@ -24,8 +24,6 @@ public class NoduleDetection extends ModuleBase {
     itkLabelMap3 mLabelMapCandidates = null;
     itkLabelMap3 mLabelMapVessel = null;
 
-    itkImageSS3 mOutput = null;
-
     QSlider mSliderMinThreshold = null;
     QSlider mSliderMaxThreshold = null;
     QSlider mSliderStep = null;
@@ -38,13 +36,13 @@ public class NoduleDetection extends ModuleBase {
 
         initializePanel();
 
-        mSliderMinThreshold = new QSlider(-800, -100, -700, "Min Threshold");
+        mSliderMinThreshold = new QSlider(-800, -100, -650, "Min Threshold");
         addToConfigPanel(mSliderMinThreshold);
 
         mSliderMaxThreshold = new QSlider(-800, -100, -100, "Max Threshold");
         addToConfigPanel(mSliderMaxThreshold);
 
-        mSliderStep = new QSlider(1, 16, 8, "Step");
+        mSliderStep = new QSlider(1, 12, 4, "Step");
         addToConfigPanel(mSliderStep);
     }
 
@@ -179,7 +177,7 @@ public class NoduleDetection extends ModuleBase {
                                 overlap++;
                         }
                         double ratio = overlap / pixels;
-                        if (ratio > 0.3) {
+                        if (ratio > 0.5) {
                             System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
                             labelObject.SetLabel(new_vlabel++);
                             mLabelMapVessel.AddLabelObject(labelObject);
