@@ -18,9 +18,8 @@ import java.net.URL;
 public class MainView extends JFrame {
 
     private static final long serialVersionUID = -1245702017236285965L;
-
+    private final JButton mBtnDelete;
     private MainViewController mViewController;
-
     private JXTreeTable mTreeTable;
     private JButton mBtnImport;
     private VtkSliceRenderPanel mRightPanel;
@@ -52,7 +51,7 @@ public class MainView extends JFrame {
         mBtnImport.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                mViewController.onImportBtnClicked(event);
+                mViewController.onImportBtnClicked();
             }
         });
         toolBar.add(mBtnImport);
@@ -64,8 +63,18 @@ public class MainView extends JFrame {
         JButton toolbarBtnMetadata = getImageButton("Metadata", "icon_MetaData.png", 32, 32);
         toolBar.add(toolbarBtnMetadata);
 
-        JButton toolbarBtnDelete = getImageButton("Delete", "icon_Delete.png", 32, 32);
-        toolBar.add(toolbarBtnDelete);
+        mBtnDelete = getImageButton("Delete", "icon_Delete.png", 32, 32);
+        mBtnDelete.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
+                Object target = treePath.getLastPathComponent();
+                System.out.println(target.toString());
+
+                mViewController.onDeleteBtnClicked((Metadata) target);
+            }
+        });
+        toolBar.add(mBtnDelete);
 
         JButton toolbarBtnSearch = getImageButton("Search","icon_Search.png", 32, 32);
         toolBar.add(toolbarBtnSearch);
@@ -138,7 +147,9 @@ public class MainView extends JFrame {
         this.setVisible(true);
     }
 
-    public void updateMetaTable() {
+    public void updateMetaTable(MetaTableTreeModel tableModel) {
+        mTreeTable.setTreeTableModel(tableModel);
+        changeTableColumnWidth(mTreeTable, columnWidth);
         mTreeTable.updateUI();
     }
 

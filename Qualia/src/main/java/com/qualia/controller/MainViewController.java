@@ -19,8 +19,8 @@ import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
 
 import javax.swing.*;
-import java.awt.event.MouseEvent;
 import java.io.File;
+import java.sql.SQLException;
 
 public class MainViewController {
     static {
@@ -39,24 +39,21 @@ public class MainViewController {
     private ConnectionSource connectionSource = null;
     private Dao<Metadata, Integer> metadataDao;
 
-    private MetaTableTreeModel mMetaTableModel;
-
     private VtkViewController mVtkViwerController;
 
     public MainViewController() {
-        this.init();
+        MetaTableTreeModel metaTableTreeModel = this.init();
 
-        mMainView = new MainView(this, mMetaTableModel);
+        mMainView = new MainView(this, metaTableTreeModel);
         mMainView.init();
-        mMainView.updateMetaTable();
     }
 
     public static void main(String[] args) throws Exception {
         new MainViewController();
     }
 
-    private void init() {
-        mMetaTableModel = new MetaTableTreeModel();
+    private MetaTableTreeModel init() {
+        MetaTableTreeModel metaTableTreeModel = new MetaTableTreeModel();
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
@@ -67,14 +64,16 @@ public class MainViewController {
                 TableUtils.createTable(connectionSource, Metadata.class);
             } else {
                 metadataDao.queryForAll();
-                mMetaTableModel.updatePatientList(metadataDao);
+                metaTableTreeModel.updatePatientList(metadataDao);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(mMainView, "Database error");
         }
+
+        return metaTableTreeModel;
     }
 
-    public void onImportBtnClicked(MouseEvent event) {
+    public void onImportBtnClicked() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fileChooser.showSaveDialog(mMainView);
@@ -101,18 +100,23 @@ public class MainViewController {
                 }
             }
 
-            try {
-                metadataDao.queryForAll();
-                mMetaTableModel.updatePatientList(metadataDao);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(mMainView, "Database error");
-            }
-            mMainView.updateMetaTable();
+            updateTable();
 
         } else {
             System.out.println("No selection");
             JOptionPane.showMessageDialog(mMainView, "No Selection");
         }
+    }
+
+    public void updateTable() {
+        MetaTableTreeModel metaTableTreeModel = new MetaTableTreeModel();
+        try {
+            metadataDao.queryForAll();
+            metaTableTreeModel.updatePatientList(metadataDao);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mMainView, "Database error");
+        }
+        mMainView.updateMetaTable(metaTableTreeModel);
     }
 
     public void onTableDataClicked(Metadata targetMetadata) {
@@ -159,4 +163,13 @@ public class MainViewController {
         return lungImage;
     }
 
+    public void onDeleteBtnClicked(Metadata targetMetadata) {
+        try {
+            metadataDao.delete(targetMetadata);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        updateTable();
+    }
 }
