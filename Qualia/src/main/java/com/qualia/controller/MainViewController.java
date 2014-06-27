@@ -6,10 +6,16 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.qualia.helper.DicomParser;
+import com.qualia.helper.ItkImageArchive;
 import com.qualia.helper.VtkImageArchive;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
+import org.itk.itkcommon.itkImageSS3;
+import org.itk.itkiogdcm.itkGDCMImageIO;
+import org.itk.itkioimagebase.itkImageSeriesReaderISS3;
+import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
+import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
 
 import javax.swing.*;
@@ -42,6 +48,7 @@ public class MainViewController {
 
         mMainView = new MainView(this, mMetaTableModel);
         mMainView.init();
+        mMainView.updateMetaTable();
     }
 
     public static void main(String[] args) throws Exception {
@@ -49,18 +56,22 @@ public class MainViewController {
     }
 
     private void init() {
+        mMetaTableModel = new MetaTableTreeModel();
+
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             metadataDao = DaoManager.createDao(connectionSource, Metadata.class);
 
-            TableUtils.dropTable(connectionSource, Metadata.class, true);
-            TableUtils.createTable(connectionSource, Metadata.class);
-
+            if (!metadataDao.isTableExists()) {
+                TableUtils.dropTable(connectionSource, Metadata.class, true);
+                TableUtils.createTable(connectionSource, Metadata.class);
+            } else {
+                metadataDao.queryForAll();
+                mMetaTableModel.updatePatientList(metadataDao);
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(mMainView, "Database error");
         }
-
-        mMetaTableModel = new MetaTableTreeModel();
     }
 
     public void onImportBtnClicked(MouseEvent event) {
@@ -81,7 +92,10 @@ public class MainViewController {
                 Metadata data = parser.getMetadataByUid(uIds[i]);
 
                 try {
-                    metadataDao.create(data);
+                    if (metadataDao.queryForEq("uid", uIds[i]).isEmpty())
+                        metadataDao.create(data);
+                    else
+                        System.out.println("duplicated data");
                 } catch (Exception e) {
                     JOptionPane.showMessageDialog(mMainView, "Database error");
                 }
@@ -105,12 +119,44 @@ public class MainViewController {
         System.out.println("clicked");
         System.out.println(targetMetadata.toString());
 
-        mMainView.updateRightPanel(VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId));
+
+        itkImageSS3 itkImage = ItkImageArchive.getInstance().getItkImage(targetMetadata.uId);
+
+        if (itkImage == null) {
+            itkImageSS3 itkImages = loadDicomImages(targetMetadata.getFullFilenameList());
+            ItkImageArchive.getInstance().setItkImage(targetMetadata.uId, itkImages);
+
+            itkImageToVTKImageFilterISS3 itkVtkFilter =
+                    new itkImageToVTKImageFilterISS3();
+
+            //convert ITK to VTK
+            itkVtkFilter.SetInput(itkImages);
+            itkVtkFilter.Update();
+            VtkImageArchive.getInstance().setVtkImage(targetMetadata.uId, itkVtkFilter.GetOutput());
+        }
+
+        vtkImageData vtkImage = VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId);
+
+        mMainView.updateRightPanel(vtkImage);
     }
 
     public void onTableDataDoubleClicked(Metadata targetMetadata) {
         mVtkViwerController = new VtkViewController(mMainView, targetMetadata);
     }
 
+    private itkImageSS3 loadDicomImages(String[] fullFilenameList) {
+        // read
+        itkImageSeriesReaderISS3 reader = new itkImageSeriesReaderISS3();
+        itkGDCMImageIO dicomIO = new itkGDCMImageIO();
+
+        reader.SetFileNames(fullFilenameList);
+        reader.SetImageIO(dicomIO);
+        reader.Update();
+
+        itkImageSS3 lungImage = reader.GetOutput();
+        lungImage.SetMetaDataDictionary(dicomIO.GetMetaDataDictionary());
+
+        return lungImage;
+    }
 
 }

@@ -42,6 +42,8 @@ public class Metadata {
     public String instituteName;
     @DatabaseField(columnName = "referName")
     public String referringName;
+    @DatabaseField(columnName = "fullFilenameList")
+    private String fullFilenameList;
     @DatabaseField(generatedId = true)
     private int id;
 
@@ -73,5 +75,18 @@ public class Metadata {
 
 
         return sb.toString();
+    }
+
+    public String[] getFullFilenameList() {
+        String[] output = fullFilenameList.split(":");
+        return output;
+    }
+
+    public void setFullFilenameList(String[] input) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : input) {
+            sb.append(s).append(":");
+        }
+        this.fullFilenameList = sb.toString();
     }
 }

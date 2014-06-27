@@ -1,13 +1,13 @@
 package com.qualia.helper;
 
+import ITKTest.ImageProcessingUtils;
 import com.qualia.model.Metadata;
-import org.itk.itkcommon.itkImageSS3;
+import org.itk.itkcommon.itkImageSS2;
 import org.itk.itkcommon.itkMetaDataObjectBase;
 import org.itk.itkcommon.itkMetaDataObjectS;
 import org.itk.itkiogdcm.itkGDCMImageIO;
 import org.itk.itkiogdcm.itkGDCMSeriesFileNames;
-import org.itk.itkioimagebase.itkImageSeriesReaderISS3;
-import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
+import org.itk.itkioimagebase.itkImageFileReaderISS2;
 import vtk.vtkRenderWindowPanel;
 
 import java.util.HashMap;
@@ -23,6 +23,8 @@ public class DicomParser {
     public DicomParser(String path) {
         mMetaMap = new HashMap<String, Metadata>();
 
+        ImageProcessingUtils.getInstance().tic();
+
         mRootPath = path;
         dicomNames_ = new itkGDCMSeriesFileNames();
 
@@ -30,27 +32,28 @@ public class DicomParser {
         dicomNames_.SetUseSeriesDetails(true);
         dicomNames_.SetDirectory(path);
         mUidList = dicomNames_.GetSeriesUIDs();
+        ImageProcessingUtils.getInstance().toc();
 
         for (int i = 0; i < mUidList.length; i++) {
             String uid = mUidList[i];
             System.out.println("try to parse : " + uid);
             String[] fullFilenameList = dicomNames_.GetFileNames(uid);
 
-            itkImageSS3 itkImages = this.loadDicomImages(fullFilenameList);
-            ItkImageArchive.getInstance().setItkImage(uid, itkImages);
 
-            // TODO : redesign image data path
-            itkImageToVTKImageFilterISS3 itkVtkFilter =
-                    new itkImageToVTKImageFilterISS3();
+            itkImageFileReaderISS2 reader = new itkImageFileReaderISS2();
+            itkGDCMImageIO dicomIO = new itkGDCMImageIO();
 
-            //convert ITK to VTK
-            itkVtkFilter.SetInput(itkImages);
-            itkVtkFilter.Update();
-            VtkImageArchive.getInstance().setVtkImage(uid, itkVtkFilter.GetOutput());
+            reader.SetFileName(fullFilenameList[0]);
+            reader.SetImageIO(dicomIO);
+            reader.Update();
+
+            itkImageSS2 itkImage = reader.GetOutput();
 
             Metadata data = new Metadata(mRootPath, uid);
 
-            String[] keys = itkImages.GetMetaDataDictionary().GetKeys();
+            data.setFullFilenameList(fullFilenameList);
+
+            String[] keys = itkImage.GetMetaDataDictionary().GetKeys();
             for (String t : keys) {
                 String[] labelId = new String[1];
                 String value;
@@ -63,7 +66,7 @@ public class DicomParser {
                 // C pointer를 이용하여 Base형의 데이터를 String으로 변환
 
                 // 포인터 가져오기
-                long pointer = itkMetaDataObjectBase.getCPtr(itkImages.GetMetaDataDictionary().Get(t));
+                long pointer = itkMetaDataObjectBase.getCPtr(itkImage.GetMetaDataDictionary().Get(t));
 
                 // 포인터를 이용하여 생성
                 itkMetaDataObjectS metaObject = new itkMetaDataObjectS(pointer, false);
@@ -107,6 +110,7 @@ public class DicomParser {
             }
 
             mMetaMap.put(uid, data);
+            ImageProcessingUtils.getInstance().toc();
         }
     }
 
@@ -119,20 +123,6 @@ public class DicomParser {
         return mMetaMap.get(uId);
     }
 
-    private itkImageSS3 loadDicomImages(String[] fullFilenameList) {
-        // read
-        itkImageSeriesReaderISS3 reader = new itkImageSeriesReaderISS3();
-        itkGDCMImageIO dicomIO = new itkGDCMImageIO();
-
-        reader.SetFileNames(fullFilenameList);
-        reader.SetImageIO(dicomIO);
-        reader.Update();
-
-        itkImageSS3 lungImage = reader.GetOutput();
-        lungImage.SetMetaDataDictionary(dicomIO.GetMetaDataDictionary());
-
-        return lungImage;
-    }
 
     static {
         new vtkRenderWindowPanel();
