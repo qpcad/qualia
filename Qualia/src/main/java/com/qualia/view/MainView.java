@@ -4,9 +4,7 @@ import com.qualia.controller.MainViewController;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import org.jdesktop.swingx.JXTreeTable;
-import vtk.vtkImageViewer2;
-import vtk.vtkInteractorStyleImage;
-import vtk.vtkRenderWindowPanel;
+import vtk.vtkImageData;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -25,7 +23,7 @@ public class MainView extends JFrame {
     private MainViewController mViewController;
 
     private JXTreeTable mTreeTable;
-    private vtkRenderWindowPanel mRightPanel;
+    private VtkSliceRenderPanel mRightPanel;
     private int[] columnWidth = {
         220,
         180,
@@ -47,12 +45,13 @@ public class MainView extends JFrame {
         getContentPane().setLayout(new BorderLayout(0, 0));
 
         JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//        toolBar.setAlignmentX(JPanel.LEFT_ALIGNMENT);
         getContentPane().add(toolBar, BorderLayout.NORTH);
 
         JPanel importPanel = getButtonPenel("Import", "icon_Import.png", new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent event) {
-                mViewController.onImportBtnClicked(event);
+                mViewController.onImportBtnClicked();
             }
         });
 
@@ -65,7 +64,16 @@ public class MainView extends JFrame {
         JPanel toolbarBtnMetadata = getButtonPenel("Metadata", "icon_MetaData.png", null);
         toolBar.add(toolbarBtnMetadata);
 
-        JPanel toolbarBtnDelete = getButtonPenel("Delete", "icon_Delete.png", null);
+        JPanel toolbarBtnDelete = getButtonPenel("Delete", "icon_Delete.png", new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
+                Object target = treePath.getLastPathComponent();
+                System.out.println(target.toString());
+
+                mViewController.onDeleteBtnClicked((Metadata) target);
+            }
+        });
         toolBar.add(toolbarBtnDelete);
 
         JPanel toolbarBtnSearch = getButtonPenel("Search", "icon_Search.png", null);
@@ -115,9 +123,8 @@ public class MainView extends JFrame {
         JPanel panel_1 = new JPanel();
         splitPane.setLeftComponent(panel_1);
 
-        mRightPanel = new vtkRenderWindowPanel();
+        mRightPanel = new VtkSliceRenderPanel();
         splitPane.setRightComponent(mRightPanel);
-        mRightPanel.setInteractorStyle(new vtkInteractorStyleImage());
     }
 
     public void init() {
@@ -127,29 +134,16 @@ public class MainView extends JFrame {
         this.setVisible(true);
     }
 
-    public void updateMetaTable() {
+    public void updateMetaTable(MetaTableTreeModel tableModel) {
         mTreeTable.setTreeTableModel(tableModel);
         changeTableColumnWidth(mTreeTable, columnWidth);
         mTreeTable.updateUI();
     }
 
-    public void updateRightPanel(vtkImageViewer2 imageViewer) {
-        imageViewer.SetRenderWindow(mRightPanel.GetRenderWindow());
-        imageViewer.SetupInteractor(mRightPanel.GetRenderWindow().GetInteractor());
+    public void updateRightPanel(vtkImageData inputImage) {
 
-        imageViewer.SetColorLevel(-500);
-        imageViewer.SetColorWindow(3000);
+        mRightPanel.render(inputImage, VtkSliceRenderPanel.ORIENTATION_XY);
 
-        int sliceMin, sliceMax, sliceMiddle;
-
-        sliceMin = imageViewer.GetSliceMin();
-        sliceMax = imageViewer.GetSliceMax();
-        sliceMiddle = (sliceMax - sliceMin) / 2;
-
-        imageViewer.SetSlice(sliceMiddle);
-        imageViewer.SetSliceOrientationToXY();
-
-        mRightPanel.Render();
     }
 
     private static void changeTableColumnWidth(JTable table, int[] widthList){
