@@ -1,4 +1,6 @@
 QuaLIA
 ======
 
-Opensource Framwork for Computer Aided Detection/Diagnosis System
+Open source framwork for Computer Aided Detection/Diagnosis
+
+OSX/Java/ITK
