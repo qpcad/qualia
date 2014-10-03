@@ -3,4 +3,4 @@ QuaLIA
 
 Open source framwork for Computer Aided Detection/Diagnosis
 
-OSX/Java/ITK
+OSX/Java/ITK/VTK
