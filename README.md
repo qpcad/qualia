@@ -6,11 +6,12 @@ Open source framwork for Computer Aided Detection/Diagnosis
 OSX/Java/ITK/VTK/Gradle
 
 
-Build
+* Build
 
 cd QuaLIA
 ./gradlew build
 
 
-Run
+* Run
+
 ./gradelw run
