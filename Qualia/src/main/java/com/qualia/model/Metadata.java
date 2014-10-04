@@ -7,21 +7,15 @@ import com.j256.ormlite.table.DatabaseTable;
 public class Metadata {
     public final static String KEY_PATIENT_NAME = "Patient's Name";
     public final static String KEY_PATIENT_ID = "Patient ID";
-    public final static String KEY_PATIENT_BIRTHDAY = "Patient's Birth Date";
-    public final static String KEY_PATIENT_SEX = "Patient's Sex";
+    public final static String KEY_PATIENT_BIRTHDAY = "Birthday";
+    public final static String KEY_PATIENT_SEX = "Sex";
     public final static String KEY_ACCESSION_NUMBER = "Accession Number";
     public final static String KEY_MODALITY = "Modality";
     public final static String KEY_STUDY_ID = "Study ID";
-    public final static String KEY_ACQUISION_DATE = "Acquisition Date";
-    public final static String KEY_CONTENT_DATE = "Content Date";
-    public final static String KEY_INSTITUTE_NAME = "Institution Name";
+    public final static String KEY_ACQUISION_DATE = "Acquisition";
+    public final static String KEY_CONTENT_DATE = "Content";
+    public final static String KEY_INSTITUTE_NAME = "Institution";
     public final static String KEY_REFERRING_NAME = "Referring Physician's Name";
-
-
-
-    @DatabaseField(generatedId = true)
-    private int id;
-
     @DatabaseField(columnName = "uid")
     public String uId;
     @DatabaseField(columnName = "path")
@@ -48,12 +42,16 @@ public class Metadata {
     public String instituteName;
     @DatabaseField(columnName = "referName")
     public String referringName;
+    @DatabaseField(columnName = "fullFilenameList")
+    private String fullFilenameList;
+    @DatabaseField(generatedId = true)
+    private int id;
 
-    Metadata(){
+    Metadata() {
 
     }
 
-    public Metadata(String path, String uId){
+    public Metadata(String path, String uId) {
         this.path = path;
         this.uId = uId;
     }
@@ -77,5 +75,18 @@ public class Metadata {
 
 
         return sb.toString();
+    }
+
+    public String[] getFullFilenameList() {
+        String[] output = fullFilenameList.split(":");
+        return output;
+    }
+
+    public void setFullFilenameList(String[] input) {
+        StringBuilder sb = new StringBuilder();
+        for (String s : input) {
+            sb.append(s).append(":");
+        }
+        this.fullFilenameList = sb.toString();
     }
 }

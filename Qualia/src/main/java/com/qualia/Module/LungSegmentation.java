@@ -1,47 +1,39 @@
-package ITKTest;
+package com.qualia.Module;
 
+import ITKTest.ImageProcessingUtils;
+import com.qualia.helper.ItkImageArchive;
+import com.qualia.model.Metadata;
+import com.qualia.view.QSlider;
+import com.qualia.view.VtkView;
 import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalClosingImageFilterIUC2IUC2SE2;
 import org.itk.itkcommon.*;
 import org.itk.itkimagecompose.itkJoinSeriesImageFilterIUC2IUC3;
 import org.itk.itkimagegrid.itkSliceBySliceImageFilterIUC3IUC3;
+import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
 import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
-/**
- * <pre>
- * kr.qualia
- * LungSegmentation.java
- * FIXME 클래스 설명
- * </pre>
- *
- * @author taznux
- * @date 2014. 4. 17.
- */
-public class LungSegmentation implements Runnable {
-    private itkImageSS3 lungImage_;
-    private itkImageUC3 lungMask_;
-    private itkImageRGBUC3 labelImage_;
 
-    public LungSegmentation() {
-        lungImage_ = null;
-        lungMask_ = null;
-        labelImage_ = null;
-    }
+public class LungSegmentation extends ModuleBase {
+    VtkView mDialog;
 
-    public itkImageUC3 getLungMask() {
-        return lungMask_;
-    }
+    Metadata mModel = null;
 
-    public itkImageSS3 getLungImage() {
-        return lungImage_;
-    }
+    itkImageSS3 mImageLung = null;
+    itkImageUC3 mImageMask = null;
 
-    public void setLungImage(itkImageSS3 lungImage) {
-        lungImage_ = lungImage;
-    }
+    QSlider mSliderThreshold = null;
 
-    public itkImageRGBUC3 getLabelImage() {
-        return labelImage_;
+    public LungSegmentation(VtkView dialog, Metadata model) {
+        name = "Lung Segmentation";
+
+        mDialog = dialog;
+        mModel = model;
+
+        initializePanel();
+
+        mSliderThreshold = new QSlider(-800, -100, -500, "Threshold");
+        addToConfigPanel(mSliderThreshold);
     }
 
     /**
@@ -63,8 +55,8 @@ public class LungSegmentation implements Runnable {
         sliceImageFilter.SetInput(thresholdImage);
         sliceImageFilter.SetDirectionCollapseToSubmatrix();
 
-        joinSliceFilter.SetOrigin(lungImage_.GetOrigin().GetElement(2));
-        joinSliceFilter.SetSpacing(lungImage_.GetSpacing().GetElement(2));
+        joinSliceFilter.SetOrigin(mImageLung.GetOrigin().GetElement(2));
+        joinSliceFilter.SetSpacing(mImageLung.GetSpacing().GetElement(2));
 
         itkImageRegion3 inputRegion = thresholdImage.GetLargestPossibleRegion();
         for (int i = 0; i < inputRegion.GetSize(2); i++) {
@@ -213,11 +205,12 @@ public class LungSegmentation implements Runnable {
      * 2.처리내용 : FIXME
      * </pre>
      *
+     * @param threshold
      * @return
      * @method getLungLabelMap
      */
-    private itkLabelMap3 getLungLabelMap() {
-        itkImageUC3 lungThresholdImage = ImageProcessingUtils.getInstance().thresholdImage(lungImage_, (short) -600);
+    private itkLabelMap3 getLungLabelMap(short threshold) {
+        itkImageUC3 lungThresholdImage = ImageProcessingUtils.getInstance().thresholdImage(mImageLung, threshold);
         itkImageUC3 initialLungMask = removeRim(lungThresholdImage);
 
         itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
@@ -231,19 +224,56 @@ public class LungSegmentation implements Runnable {
         return labelMap;
     }
 
-    public void run() {
+    private void segmentation() {
+        mImageLung = ItkImageArchive.getInstance().getItkImage(mModel.uId);
+
+        setProgress(1);
+
+
+        System.out.println("Image interpolation");
         ImageProcessingUtils.getInstance().tic();
-        itkLabelMap3 lungLabelMap = getLungLabelMap();
-        labelImage_ = ImageProcessingUtils.getInstance().labelMapToRGB(lungLabelMap);
+        itkImageSS3 isoLungImage = ImageProcessingUtils.getInstance().getInstance().imageInterpolation(mImageLung, 1.0);
+        ImageProcessingUtils.getInstance().toc();
+
+        mImageLung = isoLungImage;
+        setProgress(20);
+
+        System.out.println("Lung Segmentation" + mSliderThreshold.getValue());
+        ImageProcessingUtils.getInstance().tic();
+        itkLabelMap3 lungLabelMap = getLungLabelMap((short) mSliderThreshold.getValue());
 
         System.out.println(lungLabelMap.GetNumberOfLabelObjects());
+        setProgress(40);
 
         lungLabelMap = extractLung(lungLabelMap);
 
         System.out.println(lungLabelMap.GetNumberOfLabelObjects());
+        setProgress(60);
 
-        lungMask_ = refineLungMask(lungLabelMap);
+        mImageMask = refineLungMask(lungLabelMap);
+        setProgress(80);
+
+        /* Lung Masking */
+        itkMaskImageFilterISS3IUC3ISS3 maskFilter = new itkMaskImageFilterISS3IUC3ISS3();
+
+
+        maskFilter.SetInput1(mImageLung);
+        maskFilter.SetInput2(mImageMask);
+        maskFilter.SetOutsideValue((short) -2000);
+        maskFilter.Update();
+
+        mOutput = maskFilter.GetOutput();
 
         ImageProcessingUtils.getInstance().toc();
+
+        mDialog.renderItkImage(mOutput);
+
+        setProgress(100);
+    }
+
+    @Override
+    public void run() {
+        segmentation();
     }
 }
+

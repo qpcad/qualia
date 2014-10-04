@@ -4,116 +4,178 @@ import com.qualia.controller.MainViewController;
 import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import org.jdesktop.swingx.JXTreeTable;
-import vtk.vtkImageViewer2;
-import vtk.vtkInteractorStyleImage;
-import vtk.vtkRenderWindowPanel;
+import vtk.vtkImageData;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.net.URL;
 
 public class MainView extends JFrame {
 
-	private static final long serialVersionUID = -1245702017236285965L;
+    private static final long serialVersionUID = -1245702017236285965L;
 
     private MainViewController mViewController;
 
     private JXTreeTable mTreeTable;
-    private JButton mBtnImport;
-    private vtkRenderWindowPanel mRightPanel;
+    private VtkSliceRenderPanel mRightPanel;
+    private int[] columnWidth = {
+        220,
+        180,
+        80,
+        40,
+        40,
+        55,
+        55,
+        75,
+        75,
+        75,
+        155
+    };
 
-	public MainView(final MainViewController controller, final MetaTableTreeModel tableModel) {
+    public MainView(final MainViewController controller, final MetaTableTreeModel tableModel) {
 
         mViewController = controller;
 
-		getContentPane().setLayout(new BorderLayout(0, 0));
+        getContentPane().setLayout(new BorderLayout(0, 0));
 
-		JToolBar toolBar = new JToolBar();
-		getContentPane().add(toolBar, BorderLayout.NORTH);
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//        toolBar.setAlignmentX(JPanel.LEFT_ALIGNMENT);
+        getContentPane().add(toolBar, BorderLayout.NORTH);
 
-        mBtnImport = new JButton("Import");
-        mBtnImport.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent event) {
-                mViewController.onImportBtnClicked(event);
-			}
-		});
-		toolBar.add(mBtnImport);
+        JPanel importPanel = getButtonPenel("Import", "icon_Import.png", new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                mViewController.onImportBtnClicked();
+            }
+        });
 
-		JButton toolbarBtnExport = new JButton("Export");
-		toolBar.add(toolbarBtnExport);
+        toolBar.add(importPanel);
 
-		JButton toolbarBtnMetadata = new JButton("Meta-data");
-		toolBar.add(toolbarBtnMetadata);
 
-		JButton toolbarBtnDelete = new JButton("Delete");
-		toolBar.add(toolbarBtnDelete);
+        JPanel toolbarBtnExport = getButtonPenel("Export", "icon_Export.png", null);
+        toolBar.add(toolbarBtnExport);
 
-		JButton toolbarBtnSearch = new JButton("Search");
-		toolBar.add(toolbarBtnSearch);
+        JPanel toolbarBtnMetadata = getButtonPenel("Metadata", "icon_MetaData.png", null);
+        toolBar.add(toolbarBtnMetadata);
 
-		JButton toolbarBtnEtc = new JButton("Etc");
-		toolBar.add(toolbarBtnEtc);
-
-        mTreeTable = new JXTreeTable(tableModel);
-        mTreeTable.addMouseListener(new MouseAdapter() {
+        JPanel toolbarBtnDelete = getButtonPenel("Delete", "icon_Delete.png", new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
                 Object target = treePath.getLastPathComponent();
                 System.out.println(target.toString());
 
-                if(target instanceof Metadata){
+                mViewController.onDeleteBtnClicked((Metadata) target);
+            }
+        });
+        toolBar.add(toolbarBtnDelete);
+
+        JPanel toolbarBtnSearch = getButtonPenel("Search", "icon_Search.png", null);
+        toolBar.add(toolbarBtnSearch);
+
+//        JButton btnQuery = getImageButton("icon_.png", 32, 32);
+//        toolBar.add(btnQuery);
+//
+//        JButton btnSend = getImageButton("src/main/resources/icon_Import.png", 32, 32);
+//        toolBar.add(btnSend);
+
+        JPanel toolbarBtnEtc = getButtonPenel("Etc", "icon_Etc.png", null);
+        toolBar.add(toolbarBtnEtc);
+
+        mTreeTable = new JXTreeTable(tableModel);
+        mTreeTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+
+
+                TreePath treePath = mTreeTable.getTreeSelectionModel().getSelectionPath();
+                Object target = treePath.getLastPathComponent();
+                System.out.println(target.toString());
+
+                if (target instanceof Metadata) {
                     controller.onTableDataClicked((Metadata) target);
+                }
+
+                if ((mouseEvent.getClickCount() == 2) && (target instanceof Metadata)) {
+                    System.out.println("double clicked");
+                    controller.onTableDataDoubleClicked((Metadata) target);
                 }
 
             }
         });
         mTreeTable.setRootVisible(false);
 
-		getContentPane().add(new JScrollPane(mTreeTable), BorderLayout.CENTER);
+        changeTableColumnWidth(mTreeTable, columnWidth);
 
-		JSplitPane splitPane = new JSplitPane();
-		getContentPane().add(splitPane, BorderLayout.SOUTH);
+
+
+        getContentPane().add(new JScrollPane(mTreeTable), BorderLayout.CENTER);
+
+        JSplitPane splitPane = new JSplitPane();
+        getContentPane().add(splitPane, BorderLayout.SOUTH);
 
         JPanel panel_1 = new JPanel();
         splitPane.setLeftComponent(panel_1);
 
-        mRightPanel = new vtkRenderWindowPanel();
-		splitPane.setRightComponent(mRightPanel);
-        mRightPanel.setInteractorStyle(new vtkInteractorStyleImage());
-	}
+        mRightPanel = new VtkSliceRenderPanel();
+        splitPane.setRightComponent(mRightPanel);
+    }
 
-    public void init(){
-
+    public void init() {
         this.setPreferredSize(new Dimension(1024, 768));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         this.setVisible(true);
     }
 
-    public void updateMetaTable(){
+    public void updateMetaTable(MetaTableTreeModel tableModel) {
+        mTreeTable.setTreeTableModel(tableModel);
+        changeTableColumnWidth(mTreeTable, columnWidth);
         mTreeTable.updateUI();
     }
 
-    public void updateRightPenel(vtkImageViewer2 imageViewer){
-        imageViewer.SetRenderWindow(mRightPanel.GetRenderWindow());
-        imageViewer.SetupInteractor(mRightPanel.GetRenderWindow().GetInteractor());
+    public void updateRightPanel(vtkImageData inputImage) {
 
-        imageViewer.SetColorLevel(-500);
-        imageViewer.SetColorWindow(3000);
+        mRightPanel.render(inputImage, VtkSliceRenderPanel.ORIENTATION_XY);
 
-        int sliceMin, sliceMax, sliceMiddle;
+    }
 
-        sliceMin = imageViewer.GetSliceMin();
-        sliceMax = imageViewer.GetSliceMax();
-        sliceMiddle = (sliceMax-sliceMin)/2;
+    private static void changeTableColumnWidth(JTable table, int[] widthList){
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
 
-        imageViewer.SetSlice(sliceMiddle);
-        imageViewer.SetSliceOrientationToXY();
+        TableColumn column;
 
-        mRightPanel.Render();
+        for(int i=0;i<widthList.length;i++){
+            column = table.getColumnModel().getColumn(i);
+            column.setCellRenderer( centerRenderer );
+            column.setPreferredWidth(widthList[i]);
+        }
+    }
+
+    private JPanel getButtonPenel(String name, String resources, MouseListener mouseListener){
+        JPanel panel = new JPanel(new BorderLayout());
+
+        URL resourceUrl = getClass().getClassLoader().getResource(resources);
+        ImageIcon iconImport = new ImageIcon(resourceUrl);
+
+        Image imageImport = iconImport.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
+
+        JButton button = new JButton(new ImageIcon(imageImport));
+        button.setPreferredSize(new Dimension(80, 80));
+        button.setLayout(new BorderLayout());
+        if(mouseListener!=null) button.addMouseListener(mouseListener);
+        JLabel label = new JLabel(name, JLabel.CENTER);
+        button.add(label, BorderLayout.SOUTH);
+
+        panel.add(button, BorderLayout.CENTER);
+
+        return panel;
     }
 }

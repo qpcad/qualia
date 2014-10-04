@@ -1,5 +1,8 @@
-package ITKTest;
+package com.qualia.Module;
 
+import ITKTest.ImageProcessingUtils;
+import com.qualia.view.QSlider;
+import com.qualia.view.VtkView;
 import org.itk.itkbinarymathematicalmorphology.itkBinaryMorphologicalOpeningImageFilterIUC2IUC2SE2;
 import org.itk.itkcommon.itkImageSS3;
 import org.itk.itkcommon.itkImageUC3;
@@ -11,99 +14,54 @@ import org.itk.itkimageintensity.itkMaskImageFilterISS3IUC3ISS3;
 import org.itk.itklabelmap.*;
 import org.itk.itkmathematicalmorphology.itkFlatStructuringElement2;
 
-/**
- * <pre>
- * kr.qualia
- * NoduleCandidatesDetection.java
- * FIXME 클래스 설명
- * </pre>
- *
- * @author taznux
- * @date 2014. 4. 17.
- */
-public class NoduleCandidatesDetection implements Runnable {
-    private itkImageSS3 lungImage_;
-    private itkImageSS3 noduleCandidatesLabel_;
-    private itkImageUC3 lungMask_;
-    private itkImageUC3 noduleCandidatesMask_;
-    private itkLabelMap3 noduleCandidates_;
-    private itkImageUC3 vesselMask_;
-    private itkLabelMap3 vesselMap_;
+public class NoduleDetection extends ModuleBase {
+    VtkView mDialog;
 
-    public NoduleCandidatesDetection() {
-        lungImage_ = null;
-        lungMask_ = null;
-        noduleCandidatesMask_ = null;
-        noduleCandidates_ = null;
-        vesselMask_ = null;
-        vesselMap_ = null;
+    LungSegmentation mModuleSegmentation;
+
+    itkImageUC3 mMaskVessel = null;
+    itkImageUC3 mMaskCandidates = null;
+    itkLabelMap3 mLabelMapCandidates = null;
+    itkLabelMap3 mLabelMapVessel = null;
+
+    QSlider mSliderMinThreshold = null;
+    QSlider mSliderMaxThreshold = null;
+    QSlider mSliderStep = null;
+
+    public NoduleDetection(VtkView dialog, LungSegmentation module) {
+        name = "Nodule Candidates Detection";
+
+        mDialog = dialog;
+        mModuleSegmentation = module;
+
+        initializePanel();
+
+        mSliderMinThreshold = new QSlider(-800, -100, -650, "Min Threshold");
+        addToConfigPanel(mSliderMinThreshold);
+
+        mSliderMaxThreshold = new QSlider(-800, -100, -100, "Max Threshold");
+        addToConfigPanel(mSliderMaxThreshold);
+
+        mSliderStep = new QSlider(1, 12, 4, "Step");
+        addToConfigPanel(mSliderStep);
     }
 
-    public void setLungImage(itkImageSS3 lungImage) {
-        lungImage_ = lungImage;
+    public itkImageUC3 getMaskVessel(){
+        return mMaskVessel;
     }
 
-    public void setLungMask(itkImageUC3 lungMask) {
-        lungMask_ = lungMask;
+    public itkImageUC3 getMaskCandidates(){
+        return mMaskCandidates;
     }
 
-    public itkImageUC3 getNoduleCandidatesMask() {
-        return noduleCandidatesMask_;
+    public itkLabelMap3 getLabelMapCandidates() {
+        return mLabelMapCandidates;
     }
 
-    public itkLabelMap3 getNoduleCandidates() {
-        return noduleCandidates_;
+    public itkLabelMap3 getLabelMapVessel() {
+        return mLabelMapVessel;
     }
 
-    public itkImageUC3 getVesselMask() {
-        return vesselMask_;
-    }
-
-    public itkLabelMap3 getVesselMap() {
-        return vesselMap_;
-    }
-
-
-    public void run() {
-        ImageProcessingUtils.getInstance().tic();
-
-		/* Lung Masking */
-        itkMaskImageFilterISS3IUC3ISS3 maskFilter = new itkMaskImageFilterISS3IUC3ISS3();
-        maskFilter.SetInput1(lungImage_);
-        maskFilter.SetInput2(lungMask_);
-        maskFilter.SetOutsideValue((short) -2000);
-        maskFilter.Update();
-
-        itkImageSS3 lungSegImage;
-        lungSegImage = maskFilter.GetOutput();
-
-        multiThresholdDetection(lungSegImage);
-
-        System.out.println("Vessel Objects " + vesselMap_.GetNumberOfLabelObjects());
-        System.out.println("Objects " + noduleCandidates_.GetNumberOfLabelObjects());
-
-        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
-        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
-        itkAddImageFilterISS3ISS3ISS3 addImageFilter = new itkAddImageFilterISS3ISS3ISS3();
-        itkAddImageFilterISS3ISS3ISS3 addImageFilter1 = new itkAddImageFilterISS3ISS3ISS3();
-
-        maskImageFilter.SetConstant1((short) 1500);
-        maskImageFilter.SetMaskImage(noduleCandidatesMask_);
-        maskImageFilter1.SetConstant1((short) 200);
-        maskImageFilter1.SetMaskImage(vesselMask_);
-
-        addImageFilter.SetInput1(lungSegImage);
-        addImageFilter.SetInput2(maskImageFilter.GetOutput());
-        addImageFilter1.SetInput1(addImageFilter.GetOutput());
-        addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
-
-        maskImageFilter.SetOutsideValue((short) -300);
-        maskImageFilter1.SetOutsideValue((short) -300);
-
-        addImageFilter1.Update();
-
-        noduleCandidatesLabel_ = addImageFilter1.GetOutput();
-    }
 
     /**
      * <pre>
@@ -119,17 +77,23 @@ public class NoduleCandidatesDetection implements Runnable {
         long new_label = 1;
         long new_vlabel = 1;
 
-        int step = 8;
-        int maxThreshold = -100;
-        int minThreshold = -700;
+        int step = mSliderStep.getValue();
+        int maxThreshold = mSliderMaxThreshold.getValue();
+        int minThreshold = mSliderMinThreshold.getValue();
 
-        noduleCandidates_ = new itkLabelMap3();
-        vesselMap_ = new itkLabelMap3();
+        if (maxThreshold <= minThreshold) {
+            maxThreshold = minThreshold + 100;
+            mSliderMaxThreshold.setValue(maxThreshold);
+        }
 
-        vesselMap_.CopyInformation(lungSegImage);
-        noduleCandidates_.CopyInformation(lungSegImage);
+        mLabelMapCandidates = new itkLabelMap3();
+        mLabelMapVessel = new itkLabelMap3();
+
+        mLabelMapVessel.CopyInformation(lungSegImage);
+        mLabelMapCandidates.CopyInformation(lungSegImage);
 
         for (int i = 0; i <= step; i++) {
+            setProgress((int) Math.ceil(i * 80.0 / step));
             itkBinaryImageToShapeLabelMapFilterIUC3LM3 labelMapFilter = new itkBinaryImageToShapeLabelMapFilterIUC3LM3();
 
             short threshold = (short) (minThreshold + (maxThreshold - minThreshold) * (step - i) / step);
@@ -191,13 +155,13 @@ public class NoduleCandidatesDetection implements Runnable {
                         if (roundness < 0.8 || roundness > 1.2 || elongation > 4) { // vessel
                             System.out.println("R: " + roundness + ", E: " + elongation);
                             labelObject.SetLabel(new_vlabel++);
-                            vesselMap_.AddLabelObject(labelObject);
+                            mLabelMapVessel.AddLabelObject(labelObject);
                         }
                         continue;
                     }
                     if (elongation > 4) { // vessel - elongated object
                         labelObject.SetLabel(new_vlabel++);
-                        vesselMap_.AddLabelObject(labelObject);
+                        mLabelMapVessel.AddLabelObject(labelObject);
                         System.out.println("E: " + elongation);
 
                         continue;
@@ -209,23 +173,23 @@ public class NoduleCandidatesDetection implements Runnable {
                     if (new_vlabel > 0) {
                         int overlap = 0;
                         for (int p = 0; p < pixels; p++) {
-                            if (vesselMap_.GetPixel(labelObject.GetIndex(p)) > 0)
+                            if (mLabelMapVessel.GetPixel(labelObject.GetIndex(p)) > 0)
                                 overlap++;
                         }
                         double ratio = overlap / pixels;
-                        if (ratio > 0.3) {
+                        if (ratio > 0.5) {
                             System.out.println("Overlap:" + overlap + "/" + pixels + "=" + ratio);
                             labelObject.SetLabel(new_vlabel++);
-                            vesselMap_.AddLabelObject(labelObject);
+                            mLabelMapVessel.AddLabelObject(labelObject);
                             continue;
                         }
                     }
 
                     labelObject.SetLabel(new_label++);
-                    noduleCandidates_.AddLabelObject(labelObject);
+                    mLabelMapCandidates.AddLabelObject(labelObject);
                 }
 
-                System.out.println("Objects " + labels + " " + noduleCandidates_.GetNumberOfLabelObjects());
+                System.out.println("Objects " + labels + " " + mLabelMapCandidates.GetNumberOfLabelObjects());
                 System.out.println(new_label + ", " + new_vlabel);
             }
             ImageProcessingUtils.getInstance().toc();
@@ -235,22 +199,22 @@ public class NoduleCandidatesDetection implements Runnable {
             itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
             itkBinaryImageToLabelMapFilterIUC3LM3 binaryImageToLabelMapFilter = new itkBinaryImageToLabelMapFilterIUC3LM3();
 
-            labelMapToBinaryImageFilter.SetInput(noduleCandidates_);
+            labelMapToBinaryImageFilter.SetInput(mLabelMapCandidates);
             binaryImageToLabelMapFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
             binaryImageToLabelMapFilter.Update();
-            noduleCandidatesMask_ = labelMapToBinaryImageFilter.GetOutput();
-            noduleCandidates_ = binaryImageToLabelMapFilter.GetOutput();
+            mMaskCandidates = labelMapToBinaryImageFilter.GetOutput();
+            mLabelMapCandidates = binaryImageToLabelMapFilter.GetOutput();
         }
 
         {
             itkLabelMapToBinaryImageFilterLM3IUC3 labelMapToBinaryImageFilter = new itkLabelMapToBinaryImageFilterLM3IUC3();
             itkBinaryImageToLabelMapFilterIUC3LM3 binaryImageToLabelMapFilter = new itkBinaryImageToLabelMapFilterIUC3LM3();
 
-            labelMapToBinaryImageFilter.SetInput(vesselMap_);
+            labelMapToBinaryImageFilter.SetInput(mLabelMapVessel);
             binaryImageToLabelMapFilter.SetInput(labelMapToBinaryImageFilter.GetOutput());
             binaryImageToLabelMapFilter.Update();
-            vesselMask_ = labelMapToBinaryImageFilter.GetOutput();
-            vesselMap_ = binaryImageToLabelMapFilter.GetOutput();
+            mMaskVessel = labelMapToBinaryImageFilter.GetOutput();
+            mLabelMapVessel = binaryImageToLabelMapFilter.GetOutput();
         }
         ImageProcessingUtils.getInstance().toc();
 
@@ -258,7 +222,55 @@ public class NoduleCandidatesDetection implements Runnable {
         //ImageProcessingUtils.getInstance().writeLabelMapOverlay(vesselMap, lungSegImage, "/Users/taznux/desktop/vessel.mha");
     }
 
-    public itkImageSS3 getNoduleCandidatesLabel() {
-        return noduleCandidatesLabel_;
+    public void detection() {
+        ImageProcessingUtils.getInstance().tic();
+
+        setProgress(1);
+
+        itkImageSS3 lungSegImage = mModuleSegmentation.getOutput();
+
+        multiThresholdDetection(lungSegImage);
+
+        System.out.println("Vessel Objects " + mLabelMapVessel.GetNumberOfLabelObjects());
+        System.out.println("Objects " + mLabelMapCandidates.GetNumberOfLabelObjects());
+
+        setProgress(80);
+
+        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter = new itkMaskImageFilterISS3IUC3ISS3();
+        itkMaskImageFilterISS3IUC3ISS3 maskImageFilter1 = new itkMaskImageFilterISS3IUC3ISS3();
+        itkAddImageFilterISS3ISS3ISS3 addImageFilter = new itkAddImageFilterISS3ISS3ISS3();
+        itkAddImageFilterISS3ISS3ISS3 addImageFilter1 = new itkAddImageFilterISS3ISS3ISS3();
+
+        maskImageFilter.SetConstant1((short) 1500);
+        maskImageFilter.SetMaskImage(mMaskCandidates);
+        maskImageFilter1.SetConstant1((short) 200);
+        maskImageFilter1.SetMaskImage(mMaskVessel);
+
+        addImageFilter.SetInput1(lungSegImage);
+        addImageFilter.SetInput2(maskImageFilter.GetOutput());
+        addImageFilter1.SetInput1(addImageFilter.GetOutput());
+        addImageFilter1.SetInput2(maskImageFilter1.GetOutput());
+
+        maskImageFilter.SetOutsideValue((short) -300);
+        maskImageFilter1.SetOutsideValue((short) -300);
+
+        addImageFilter1.Update();
+
+        setProgress(90);
+
+        mOutput = addImageFilter1.GetOutput();
+
+        mDialog.renderItkImage(mOutput);
+
+        setProgress(100);
+    }
+
+    @Override
+    public void run() {
+        if (mModuleSegmentation.getOutput() == null) {
+            mModuleSegmentation.setVisible(true);
+            mModuleSegmentation.run();
+        }
+        detection();
     }
 }

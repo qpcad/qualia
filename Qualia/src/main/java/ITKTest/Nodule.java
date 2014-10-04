@@ -13,54 +13,51 @@ import org.itk.itklabelmap.itkStatisticsLabelObjectUL3;
  * @date 2014. 4. 17.
  */
 public class Nodule {
-	private String noduleUID_;
-	private long label_;
-	
-	int subtlety;
-	int internalStructure;
-	int calcification;
-	int margin;
-	int lobulation;
-	int spiculation;
-	int texture;
-	int malignancy;
-	
-	
-	private itkStatisticsLabelObjectUL3 noduleObj;
-	
-	public Nodule() {
-		subtlety = 0;
-		internalStructure = 0;
-		calcification = 0;
-		margin = 0;
-		lobulation = 0;
-		spiculation = 0;
-		texture = 0;
-		malignancy = 0;
-	}
+    int subtlety;
+    int internalStructure;
+    int calcification;
+    int margin;
+    int lobulation;
+    int spiculation;
+    int texture;
+    int malignancy;
+    private String noduleUID_;
+    private long label_;
+    private itkStatisticsLabelObjectUL3 noduleObj;
 
-	public itkStatisticsLabelObjectUL3 getNoduleObj() {
-		return noduleObj;
-	}
+    public Nodule() {
+        subtlety = 0;
+        internalStructure = 0;
+        calcification = 0;
+        margin = 0;
+        lobulation = 0;
+        spiculation = 0;
+        texture = 0;
+        malignancy = 0;
+    }
 
-	public void setNoduleObj(itkStatisticsLabelObjectUL3 noduleObj) {
-		setLabel(noduleObj.GetLabel());
-		this.noduleObj = noduleObj;
-	}
+    public itkStatisticsLabelObjectUL3 getNoduleObj() {
+        return noduleObj;
+    }
 
-	public String getNoduleUID() {
-		return noduleUID_;
-	}
+    public void setNoduleObj(itkStatisticsLabelObjectUL3 noduleObj) {
+        setLabel(noduleObj.GetLabel());
+        this.noduleObj = noduleObj;
+    }
 
-	public void setNoduleUID(String noduleUID) {
-		noduleUID_ = noduleUID;
-	}
+    public String getNoduleUID() {
+        return noduleUID_;
+    }
 
-	public long getLabel() {
-		return label_;
-	}
+    public void setNoduleUID(String noduleUID) {
+        noduleUID_ = noduleUID;
+    }
 
-	public void setLabel(long label) {
-		label_ = label;
-	}
+    public long getLabel() {
+        return label_;
+    }
+
+    public void setLabel(long label) {
+        label_ = label;
+    }
 }
