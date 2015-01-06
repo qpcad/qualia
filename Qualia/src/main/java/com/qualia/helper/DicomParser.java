@@ -1,6 +1,7 @@
 package com.qualia.helper;
 
 import ITKTest.ImageProcessingUtils;
+import com.qualia.controller.MainViewController;
 import com.qualia.model.Metadata;
 import org.itk.itkcommon.itkImageSS2;
 import org.itk.itkcommon.itkMetaDataObjectBase;
@@ -8,11 +9,11 @@ import org.itk.itkcommon.itkMetaDataObjectS;
 import org.itk.itkiogdcm.itkGDCMImageIO;
 import org.itk.itkiogdcm.itkGDCMSeriesFileNames;
 import org.itk.itkioimagebase.itkImageFileReaderISS2;
-import vtk.vtkRenderWindowPanel;
 
 import java.util.HashMap;
 
-public class DicomParser {
+public class DicomParser implements Runnable {
+    private MainViewController mMainViewController;
     private HashMap<String, Metadata> mMetaMap;
 
     private itkGDCMSeriesFileNames dicomNames_;
@@ -22,16 +23,35 @@ public class DicomParser {
 
     public DicomParser(String path) {
         mMetaMap = new HashMap<String, Metadata>();
-
-        ImageProcessingUtils.getInstance().tic();
-
         mRootPath = path;
         dicomNames_ = new itkGDCMSeriesFileNames();
 
         dicomNames_.SetRecursive(true);
         dicomNames_.SetUseSeriesDetails(true);
-        dicomNames_.SetDirectory(path);
+    }
+
+    public DicomParser(MainViewController mainViewController, String path) {
+        this(path);
+        mMainViewController = mainViewController;
+    }
+
+    public String[] getUidList() {
+        return mUidList;
+    }
+
+
+    public Metadata getMetadataByUid(String uId) {
+        return mMetaMap.get(uId);
+    }
+
+    @Override
+    public void run() {
+        ImageProcessingUtils.getInstance().tic();
+
+        dicomNames_.SetDirectory(mRootPath);
         mUidList = dicomNames_.GetSeriesUIDs();
+
+
         ImageProcessingUtils.getInstance().toc();
 
         for (int i = 0; i < mUidList.length; i++) {
@@ -110,22 +130,12 @@ public class DicomParser {
             }
 
             mMetaMap.put(uid, data);
+            if (mMainViewController != null)
+                mMainViewController.addDicomImages(data);
             ImageProcessingUtils.getInstance().toc();
         }
+
+        if (mMainViewController != null)
+            mMainViewController.updateTable();
     }
-
-    public String[] getUidList() {
-        return mUidList;
-    }
-
-
-    public Metadata getMetadataByUid(String uId) {
-        return mMetaMap.get(uId);
-    }
-
-
-    static {
-        new vtkRenderWindowPanel();
-    }
-
 }

@@ -23,6 +23,7 @@ public class MainView extends JFrame {
     private MainViewController mViewController;
 
     private JXTreeTable mTreeTable;
+    private VtkThumbnailViewPanel mLeftPanel;
     private VtkSliceRenderPanel mRightPanel;
     private int[] columnWidth = {
         220,
@@ -119,16 +120,31 @@ public class MainView extends JFrame {
 
         JSplitPane splitPane = new JSplitPane();
         getContentPane().add(splitPane, BorderLayout.SOUTH);
+        splitPane.setDividerLocation(900);
 
-        JPanel panel_1 = new JPanel();
-        splitPane.setLeftComponent(panel_1);
+        mLeftPanel = new VtkThumbnailViewPanel();
+        splitPane.setLeftComponent(mLeftPanel);
 
         mRightPanel = new VtkSliceRenderPanel();
+        mRightPanel.setPreferredSize(new Dimension(400, 300));
         splitPane.setRightComponent(mRightPanel);
     }
 
+    private static void changeTableColumnWidth(JTable table, int[] widthList) {
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+
+        TableColumn column;
+
+        for (int i = 0; i < widthList.length; i++) {
+            column = table.getColumnModel().getColumn(i);
+            column.setCellRenderer(centerRenderer);
+            column.setPreferredWidth(widthList[i]);
+        }
+    }
+
     public void init() {
-        this.setPreferredSize(new Dimension(1024, 768));
+        this.setPreferredSize(new Dimension(1280, 800));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         this.setVisible(true);
@@ -146,19 +162,6 @@ public class MainView extends JFrame {
 
     }
 
-    private static void changeTableColumnWidth(JTable table, int[] widthList){
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment( JLabel.CENTER );
-
-        TableColumn column;
-
-        for(int i=0;i<widthList.length;i++){
-            column = table.getColumnModel().getColumn(i);
-            column.setCellRenderer( centerRenderer );
-            column.setPreferredWidth(widthList[i]);
-        }
-    }
-
     private JPanel getButtonPenel(String name, String resources, MouseListener mouseListener){
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -168,11 +171,12 @@ public class MainView extends JFrame {
         Image imageImport = iconImport.getImage().getScaledInstance(32, 32, java.awt.Image.SCALE_SMOOTH);
 
         JButton button = new JButton(new ImageIcon(imageImport));
-        button.setPreferredSize(new Dimension(80, 80));
+        button.setPreferredSize(new Dimension(48, 48));
         button.setLayout(new BorderLayout());
         if(mouseListener!=null) button.addMouseListener(mouseListener);
         JLabel label = new JLabel(name, JLabel.CENTER);
-        button.add(label, BorderLayout.SOUTH);
+        //button.add(label, BorderLayout.EAST);
+        button.setToolTipText(name);
 
         panel.add(button, BorderLayout.CENTER);
 

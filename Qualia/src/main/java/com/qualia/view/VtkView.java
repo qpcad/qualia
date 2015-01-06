@@ -85,6 +85,15 @@ public class VtkView extends JDialog {
         });
         toolBar.add(btnModule3);
 
+        JButton btnModule4 = new JButton("ANN Nodule Classification");
+        btnModule4.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                mController.onModule4BtnClicked();
+            }
+        });
+        toolBar.add(btnModule4);
+
         JPanel panelVtkRenderArea = new JPanel();
         paneCenter.add(panelVtkRenderArea, BorderLayout.CENTER);
 

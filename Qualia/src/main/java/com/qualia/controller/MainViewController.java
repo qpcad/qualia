@@ -5,6 +5,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.qualia.helper.DicomLoader;
 import com.qualia.helper.DicomParser;
 import com.qualia.helper.ItkImageArchive;
 import com.qualia.helper.VtkImageArchive;
@@ -12,9 +13,8 @@ import com.qualia.model.MetaTableTreeModel;
 import com.qualia.model.Metadata;
 import com.qualia.view.MainView;
 import org.itk.itkcommon.itkImageSS3;
-import org.itk.itkiogdcm.itkGDCMImageIO;
-import org.itk.itkioimagebase.itkImageSeriesReaderISS3;
-import org.itk.itkvtkglue.itkImageToVTKImageFilterISS3;
+import org.pushingpixels.substance.api.SubstanceLookAndFeel;
+import org.pushingpixels.substance.api.skin.TwilightSkin;
 import vtk.vtkImageData;
 import vtk.vtkNativeLibrary;
 
@@ -49,6 +49,7 @@ public class MainViewController {
     }
 
     public static void main(String[] args) throws Exception {
+        SubstanceLookAndFeel.setSkin(new TwilightSkin());
         new MainViewController();
     }
 
@@ -83,24 +84,9 @@ public class MainViewController {
         if (dir != null) {
             System.out.println(dir.getPath());
 
-            DicomParser parser = new DicomParser(dir.getPath());
-
-            String[] uIds = parser.getUidList();
-
-            for (int i = 0; i < uIds.length; i++) {
-                Metadata data = parser.getMetadataByUid(uIds[i]);
-
-                try {
-                    if (metadataDao.queryForEq("uid", uIds[i]).isEmpty())
-                        metadataDao.create(data);
-                    else
-                        System.out.println("duplicated data");
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(mMainView, "Database error");
-                }
-            }
-
-            updateTable();
+            DicomParser parser = new DicomParser(this, dir.getPath());
+            Thread th = new Thread(parser);
+            th.start();
 
         } else {
             System.out.println("No selection");
@@ -108,7 +94,18 @@ public class MainViewController {
         }
     }
 
-    public void updateTable() {
+    public synchronized void addDicomImages(Metadata data) {
+        try {
+            if (metadataDao.queryForEq("uid", data.uId).isEmpty())
+                metadataDao.create(data);
+            else
+                System.out.println("duplicated data");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mMainView, "Database error");
+        }
+    }
+
+    public synchronized void updateTable() {
         MetaTableTreeModel metaTableTreeModel = new MetaTableTreeModel();
         try {
             metadataDao.queryForAll();
@@ -127,40 +124,23 @@ public class MainViewController {
         itkImageSS3 itkImage = ItkImageArchive.getInstance().getItkImage(targetMetadata.uId);
 
         if (itkImage == null) {
-            itkImageSS3 itkImages = loadDicomImages(targetMetadata.getFullFilenameList());
-            ItkImageArchive.getInstance().setItkImage(targetMetadata.uId, itkImages);
-
-            itkImageToVTKImageFilterISS3 itkVtkFilter =
-                    new itkImageToVTKImageFilterISS3();
-
-            //convert ITK to VTK
-            itkVtkFilter.SetInput(itkImages);
-            itkVtkFilter.Update();
-            VtkImageArchive.getInstance().setVtkImage(targetMetadata.uId, itkVtkFilter.GetOutput());
+            DicomLoader dicomLoader = new DicomLoader(mMainView, targetMetadata);
+            Thread th = new Thread(dicomLoader);
+            th.start();
+        } else {
+            vtkImageData vtkImage = VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId);
+            mMainView.updateRightPanel(vtkImage);
         }
-
-        vtkImageData vtkImage = VtkImageArchive.getInstance().getVtkImage(targetMetadata.uId);
-
-        mMainView.updateRightPanel(vtkImage);
     }
 
     public void onTableDataDoubleClicked(Metadata targetMetadata) {
+        itkImageSS3 itkImage = ItkImageArchive.getInstance().getItkImage(targetMetadata.uId);
+
+        if (itkImage == null) {
+            DicomLoader dicomLoader = new DicomLoader(mMainView, targetMetadata);
+            dicomLoader.run();
+        }
         mVtkViwerController = new VtkViewController(mMainView, targetMetadata);
-    }
-
-    private itkImageSS3 loadDicomImages(String[] fullFilenameList) {
-        // read
-        itkImageSeriesReaderISS3 reader = new itkImageSeriesReaderISS3();
-        itkGDCMImageIO dicomIO = new itkGDCMImageIO();
-
-        reader.SetFileNames(fullFilenameList);
-        reader.SetImageIO(dicomIO);
-        reader.Update();
-
-        itkImageSS3 lungImage = reader.GetOutput();
-        lungImage.SetMetaDataDictionary(dicomIO.GetMetaDataDictionary());
-
-        return lungImage;
     }
 
     public void onDeleteBtnClicked(Metadata targetMetadata) {

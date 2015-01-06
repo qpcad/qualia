@@ -1,9 +1,6 @@
 package com.qualia.controller;
 
-import com.qualia.Module.LungSegmentation;
-import com.qualia.Module.NoduleClassification;
-import com.qualia.Module.NoduleDetection;
-import com.qualia.Module.ViewerSetting;
+import com.qualia.Module.*;
 import com.qualia.model.Metadata;
 import com.qualia.view.VtkView;
 
@@ -17,14 +14,13 @@ public class VtkViewController {
     private LungSegmentation mModuleSegmentation;
     private NoduleDetection mModuleDetection;
     private NoduleClassification mModuleClassification;
+    private AnnNoduleClassification mAnnModuleClassification;
 
     public VtkViewController(JFrame frame, Metadata model) {
         mModel = model;
         dialog = new VtkView(model, this);
         dialog.pack();
         dialog.setVisible(true);
-
-        dialog.setModel(model);
 
         mViewerSetting = new ViewerSetting(dialog);
         mViewerSetting.setVisible(true);
@@ -41,6 +37,12 @@ public class VtkViewController {
         mModuleClassification = new NoduleClassification(dialog, mModuleSegmentation, mModuleDetection);
         mModuleClassification.setVisible(false);
         dialog.paneModule.add(mModuleClassification);
+
+        mAnnModuleClassification = new AnnNoduleClassification(dialog, mModuleSegmentation, mModuleDetection);
+        mAnnModuleClassification.setVisible(false);
+        dialog.paneModule.add(mAnnModuleClassification);
+
+        dialog.setModel(model);
     }
 
     public void onModule1BtnClicked() {
@@ -57,5 +59,9 @@ public class VtkViewController {
 
     public void onModuleViewerSettingBtnClicked() {
         mViewerSetting.setVisible(!mViewerSetting.isVisible());
+    }
+
+    public void onModule4BtnClicked() {
+        mAnnModuleClassification.setVisible(!mAnnModuleClassification.isVisible());
     }
 }
